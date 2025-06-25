@@ -92,11 +92,9 @@ public class MultiToolAgent {
     public static void main(String[] args) throws Exception {
         InMemoryRunner runner = new InMemoryRunner(ROOT_AGENT);
 
-        Session session =
-                runner
-                        .sessionService()
-                        .createSession(NAME, USER_ID)
-                        .blockingGet();
+        Session session = runner.sessionService()
+                            .createSession(NAME, USER_ID)
+                            .blockingGet();
 
         try (Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8)) {
             while (true) {

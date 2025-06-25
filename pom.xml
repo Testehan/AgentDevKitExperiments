@@ -3,7 +3,13 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.testehan.adk</groupId>
   <artifactId>adk-experiments</artifactId>
-  <packaging>jar</packaging>
+  <packaging>pom</packaging>
+
+  <modules>
+    <module>quickstart</module>
+    <module>streaming</module>
+  </modules>
+
   <version>1.0-SNAPSHOT</version>
   <name>adk-experiments</name>
   <url>http://maven.apache.org</url>

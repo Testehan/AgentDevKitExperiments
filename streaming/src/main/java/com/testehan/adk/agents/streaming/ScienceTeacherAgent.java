@@ -17,10 +17,16 @@ public class ScienceTeacherAgent {
     public static BaseAgent ROOT_AGENT = initAgent();
 
     public static BaseAgent initAgent() {
+
+        /*
+            As we saw, you do not have to write any specific code in the agent itself for the
+            text streaming capability. It is provided as an ADK Agent feature by default.
+         */
+
         return LlmAgent.builder()
                 .name(NAME)
                 .description("Science teacher agent")
-                .model("gemini-2.0-flash")
+                .model("gemini-2.0-flash-live-001")     // this live version of the model is needed in order to have audio chats
                 .instruction("""
                                 You are a helpful science teacher that explains
                                 science concepts to kids and teenagers.

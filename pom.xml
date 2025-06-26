@@ -10,6 +10,7 @@
     <module>streaming</module>
     <module>live-audio</module>
     <module>two-agents</module>
+    <module>workflow-agents</module>
   </modules>
 
   <version>1.0-SNAPSHOT</version>

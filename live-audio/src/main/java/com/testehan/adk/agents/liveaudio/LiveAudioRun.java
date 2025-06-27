@@ -168,8 +168,6 @@ public final class LiveAudioRun {
                     break;
                 }
 
-                // TODO the next 2 lines should be added to google docs example, as they are missing and the method process event is never called.
-                // you should do this on 6th of july ?
                 AtomicBoolean audioReceived = new AtomicBoolean(false);
                 processEvent(event, audioReceived);  // Call it here
 

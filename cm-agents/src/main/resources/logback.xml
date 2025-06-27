@@ -1,0 +1,26 @@
+<configuration>
+
+    <!-- This appender prints log messages to the console -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!-- This format is similar to the one in the Python example -->
+            <pattern>%d{YYYY-MM-dd HH:mm:ss.SSS} - %-5level - %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!--
+      This sets the root logging level to INFO.
+      You can change "INFO" to "DEBUG" to get more verbose output,
+      which is useful for troubleshooting. [1]
+    -->
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+    </root>
+
+    <!--
+      To get detailed logs from the ADK specifically (like the LLM prompts),
+      set its logger level to DEBUG. This is a best practice. [1]
+    -->
+    <logger name="google_adk" level="DEBUG" />
+
+</configuration>

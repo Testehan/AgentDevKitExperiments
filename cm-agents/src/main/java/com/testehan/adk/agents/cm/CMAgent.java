@@ -10,11 +10,15 @@ import com.google.genai.types.Content;
 import com.google.genai.types.Part;
 import com.testehan.adk.agents.cm.tools.Tools;
 import io.reactivex.rxjava3.core.Flowable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
 public class CMAgent {
+
+    private static final Logger logger = LoggerFactory.getLogger(CMAgent.class);
 
     private static String USER_ID = "casamia";
     private static String NAME = "multi_tool_agent";
@@ -23,9 +27,11 @@ public class CMAgent {
     public static BaseAgent ROOT_AGENT = initAgent();
 
     public static BaseAgent initAgent() {
+        logger.info("Agent init started");
+
         return LlmAgent.builder()
                 .name(NAME)
-                .model("gemini-2.0-flash")
+                .model("gemini-2.5-pro")
                 .description("Agent to extract relevant real estate information.")
                 .instruction(
                         "You are a real estate data analyst. " +
@@ -36,13 +42,19 @@ public class CMAgent {
                         "- price (the numerical value and currency) " +
                         "- location (the city and neighborhood) " +
                         "- usable_area (the area in square meters) " +
-                        "- detailed_description (a summary of the property features)"
+                        "- detailed_description (the exact description of the property)"
                 )
                 .tools(
                         FunctionTool.create(Tools.class, "getTextFromUrl")
                        )
                 .build();
     }
+
+    // TODO
+    // 1. ADD json for how you want the result of the agent to look like
+    // 2,. with the help of selenium and headless browser, you need to make another agent or to improve
+    // existing one so that you can also get the image links of the property. because these are loaded
+    // with js dynamically, this approach is needed, as the current solution from above gets only the html code
 
     public static void main(String[] args) throws Exception {
         InMemoryRunner runner = new InMemoryRunner(ROOT_AGENT);

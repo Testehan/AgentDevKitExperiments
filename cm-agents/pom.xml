@@ -30,6 +30,12 @@
             <scope>runtime</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-java</artifactId>
+            <version>4.33.0</version>
+        </dependency>
+
         <!-- JSoup for Static HTML Parsing -->
         <dependency>
             <groupId>org.jsoup</groupId>

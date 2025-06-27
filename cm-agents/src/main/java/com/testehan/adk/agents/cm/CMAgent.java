@@ -80,7 +80,13 @@ public class CMAgent {
                                     Schema.builder()
                                             .type("STRING")
                                             .description("Name of the owner.")
-                                            .build()))
+                                            .build(),
+                                    "imageUrls", Schema.builder()
+                                            .type("ARRAY")
+                                            .description("A list of all found image URLs from the page.")
+                                            .items(Schema.builder().type("STRING").build())
+                                            .build()
+                            ))
                     .required(
                             List.of(
                                     "name",
@@ -99,9 +105,9 @@ public class CMAgent {
         return LlmAgent.builder()
                 .name(BROWSER_AGENT_NAME)
                 .model(USED_MODEL_NAME) // Flash is great for simple tool routing
-                .description("Agent that browses a URL and returns its text content.")
-                .instruction("Your only task is to use the getTextFromUrl tool with the URL provided by the user.")
-                .tools(FunctionTool.create(Tools.class, "getTextFromUrl"))
+                .description("This agent accepts a URL and uses a headless browser to return the full page text and a list of image URLs.")
+                .instruction("You are a web browser. Given a URL, call the 'extractPageContentAndImages' tool and return the result.")
+                .tools(FunctionTool.create(Tools.class, "extractPageContentAndImages"))
                 .build();
     }
 
@@ -129,12 +135,15 @@ public class CMAgent {
         return LlmAgent.builder()
                 .name("orchestrator_agent")
                 .model(USED_MODEL_NAME)
-                .description("A real estate assistant that extracts property details from a URL.")
+                .description("A real estate assistant that extracts property details and image URLs from a webpage.")
                 .instruction(
-                        "You are a master real estate analyst. Your goal is to extract structured property data from a user-provided URL. "
-                            + "You must do this in two steps: "
-                            + "1. First, call the 'browser_agent' with the URL to get the webpage's text content. "
-                            + "2. Second, take the text content returned by the browser and pass it as input to the 'extractor_agent' to get the final structured data."
+                        "You are a master real estate analyst. Your goal is to extract structured data from a user-provided URL. "
+                                + "You must do this in two steps: "
+                                + "1. First, call the 'browser_agent' with the URL. This will return a JSON object " +
+                                "containing 'pageText' and 'imageUrls'. "
+                                + "2. Second, take the entire JSON object returned by the browser and pass it as input " +
+                                "to the 'extractor_agent' to get the final structured data. Make sure to include both " +
+                                "the text and the list of image URLs in the prompt for the extractor."
                 )
                 .subAgents(browser, extractor)
                 .build();

@@ -49,7 +49,7 @@ public class CMAgent {
                                     Schema.builder()
                                             .type("STRING")
                                             .description(
-                                                    "The address or area where the apartment is located in the mentioned city.")
+                                                    "This must contain the address if available. If address is not mentioned use area where the apartment is located.")
                                             .build(),
                                     "shortDescription",
                                     Schema.builder()

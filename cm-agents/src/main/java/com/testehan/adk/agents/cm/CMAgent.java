@@ -104,7 +104,7 @@ public class CMAgent {
     public static BaseAgent createBrowserAgent() {
         return LlmAgent.builder()
                 .name(BROWSER_AGENT_NAME)
-                .model(USED_MODEL_NAME) // Flash is great for simple tool routing
+                .model(USED_MODEL_NAME)
                 .description("This agent accepts a URL and uses a headless browser to return the full page text and a list of image URLs.")
                 .instruction("You are a web browser. Given a URL, call the 'extractPageContentAndImages' tool and return the result.")
                 .tools(FunctionTool.create(Tools.class, "extractPageContentAndImages"))
@@ -115,7 +115,7 @@ public class CMAgent {
     public static BaseAgent createExtractorAgent() {
         return LlmAgent.builder()
                 .name(EXTRACTOR_AGENT_NAME)
-                .model(USED_MODEL_NAME) // Pro is great for complex extraction
+                .model(USED_MODEL_NAME)
                 .description("Agent to extract relevant real estate information from text.")
                 .instruction("You are a real estate data analyst. Analyze the provided text to find all the required " +
                         "details and return them as a clean JSON object matching the schema.")
@@ -148,11 +148,6 @@ public class CMAgent {
                 .subAgents(browser, extractor)
                 .build();
     }
-
-    // TODO
-    // 2,. with the help of selenium and headless browser, you need to make another agent or to improve
-    // existing one so that you can also get the image links of the property. because these are loaded
-    // with js dynamically, this approach is needed, as the current solution from above gets only the html code
 
     public static void main(String[] args) throws Exception {
         // We now initialize the runner with our single ROOT_AGENT, the orchestrator.

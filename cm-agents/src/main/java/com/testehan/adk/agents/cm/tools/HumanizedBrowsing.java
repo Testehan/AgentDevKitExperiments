@@ -65,7 +65,15 @@ public class HumanizedBrowsing
             // Simulate human scrolling : This is crucial for lazy-loading content and looks more natural.
             simulateHumanScrolling(driver);
 
-            String text = driver.findElement(By.tagName("body")).getText();
+            String mainContentSelector = "[data-testid='main']";
+            String text = "";
+            try {
+                WebElement mainContentContainer = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(mainContentSelector)));
+                LOGGER.info("Found the main container.");
+                text = mainContentContainer.getText();
+            } catch (TimeoutException e) {
+                LOGGER.warn("Main content container with selector '{}' was not found on the page.", mainContentSelector);
+            }
             LOGGER.info("Obtained page text successfully.");
 
             List<String> imageUrls = new ArrayList<>();

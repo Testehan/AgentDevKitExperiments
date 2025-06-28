@@ -1,3 +1,4 @@
 /HowToRun.txt
 /target/
 /.idea/
+/cm-agents/src/main/resources/secrets.properties

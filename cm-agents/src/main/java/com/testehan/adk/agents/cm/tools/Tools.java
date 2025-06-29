@@ -1,5 +1,6 @@
 package com.testehan.adk.agents.cm.tools;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.adk.tools.Annotations;
@@ -7,13 +8,16 @@ import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
 import com.networknt.schema.ValidationMessage;
-import com.testehan.adk.agents.cm.CMAgent;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -51,6 +55,45 @@ public class Tools {
         );
     }
 
+    /**
+     * Calls a given API endpoint to fetch a JSON array of URLs.
+     * @param apiEndpoint The full URL of the API to call.
+     * @return A map containing the status and a list of URLs found.
+     */
+    @Annotations.Schema(
+            name = "getUrlsFromApi",
+            description = "Navigates to an API to get the list of URLs that must be processed."
+    )
+    public static Map<String, Object> getUrlsFromApi(@Annotations.Schema(name = "apiEndpoint", description = "The endpoint for which the retrieval must be done") String apiEndpoint) {
+        LOGGER.info("Tool called: Fetching URLs from API endpoint: {}", apiEndpoint);
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(apiEndpoint))
+                .header("Accept", "application/json") // Good practice to specify expected content type
+                .build();
+        try {
+            // Send the request and get the response
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            // Check if the request was successful
+            if (response.statusCode() != 200) {
+                return Map.of("status", "error", "message", "API call failed with status code: " + response.statusCode());
+            }
+
+            String responseBody = response.body();
+            // Parse the JSON array of strings into a Java List<String>
+            List<String> urls = OBJECT_MAPPER.readValue(responseBody, new TypeReference<>() {});
+
+            LOGGER.info("Successfully fetched {} URLs from the API.", urls.size());
+            return Map.of("status", "success", "urls", urls);
+
+        } catch (Exception e) {
+            LOGGER.error("An error occurred while calling the API", e);
+            return Map.of("status", "error", "message", "An unexpected error occurred: " + e.getMessage());
+        }
+    }
+
+    // todo rename method name to something related to "listings"
     public static Map<String, String> getTextFromUrl(
             @Annotations.Schema(name = "getTextFromUrl", description = "The url for which the retrieval must be done")
             String url) {

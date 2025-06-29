@@ -63,7 +63,7 @@ public class HumanizedBrowsing
             WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15)); // Increased wait time slightly
 
             // Introduce a random delay before even loading the page
-            sleepRandomly(1, 3);
+//            sleepRandomly(1, 3);
 
             driver.get(fullUrl);
 
@@ -151,12 +151,12 @@ public class HumanizedBrowsing
         for (int y = 0; y < pageHeight; y += scrollIncrement) {
             js.executeScript("window.scrollTo(0, " + y + ");");
             // Add a small, random pause between scrolls
-            sleepRandomly(0, 3); // Sleeps for 0 to 3 second
+            sleepRandomly(0, 1); // Sleeps for 0 to 3 second
         }
 
         // One final scroll to the bottom to be sure
         js.executeScript("window.scrollTo(0, document.body.scrollHeight);");
-        sleepRandomly(1, 2); // Pause after scrolling is complete
+        sleepRandomly(0, 1); // Pause after scrolling is complete
     }
 
 }

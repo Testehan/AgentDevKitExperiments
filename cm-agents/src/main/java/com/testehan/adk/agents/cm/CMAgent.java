@@ -29,7 +29,8 @@ public class CMAgent {
     private static final String BROWSER_AGENT_NAME = "browser_agent";
     private static final String EXTRACTOR_AGENT_NAME = "extractor_agent";
 
-    private static final Schema PROPERTY_INFORMATION =
+    // todo move this to a separate class Schemas
+    public static final Schema PROPERTY_INFORMATION =
             Schema.builder()
                     .type("OBJECT")
                     .description("Schema for the extracted property information.")
@@ -113,18 +114,46 @@ public class CMAgent {
 
     // Agent 2 - The Extractor Agent. Its only job is to extract data.
     public static BaseAgent createExtractorAgent() {
+        // First, get the schema definition as a string to embed in the prompt.
+        final String schemaDefinition =  PROPERTY_INFORMATION.toJson();
+        logger.info("schemaDefinition " + schemaDefinition);
+
         return LlmAgent.builder()
                 .name(EXTRACTOR_AGENT_NAME)
                 .model(USED_MODEL_NAME)
-                .description("Agent to extract relevant real estate information from text.")
-                .instruction("You are a real estate data analyst. Analyze the provided text to find all the required " +
-                        "details and return them as a clean JSON object matching the schema.")
-                .outputSchema(PROPERTY_INFORMATION)
+                .description("An expert agent that extracts real estate information, validates it to see if it respects the given schema, and finally returns the correct data.")
+                .instruction("You are a highly capable and meticulous data analyst. Your entire goal is to produce a single, validated JSON string from a URL. " +
+                        "You MUST follow this process exactly and not skip any steps. " +
+
+                        "HERE IS THE SCHEMA DEFINITION YOUR FINAL JSON STRING MUST ADHERE TO: \n" +
+                        "--- SCHEMA START --- \n" +
+                        schemaDefinition + "\n" +
+                        "--- SCHEMA END --- \n\n" +
+
+                        "YOUR STEP-BY-STEP PROCESS: \n" +
+                        "1. Call the 'extractPageContentAndImages' tool with the user-provided URL to get the raw page content. \n" +
+
+                        "2. Analyze the raw content. Based on that content and the schema definition I provided above, generate a JSON **string**. \n" +
+
+                        "3. **MANDATORY SELF-VALIDATION:** Call the 'validatePropertyJson' tool to check the JSON string you just created in Step 2. \n" +
+
+                        "4. **CHECK THE RESULT:** \n" +
+                        "   - If the validation tool returns 'isValid: true', your job is done. " +
+                        "     **Your final answer MUST be the raw JSON string itself, without any Markdown formatting, code blocks, or extra words.** " +
+                        "     It must start with `{` and end with `}`. " +
+                        "   - If the validation tool returns 'isValid: false', you have made an error. You MUST NOT return the broken string. Instead, read the error message, go back to Step 2, and create a NEW, corrected JSON string, then immediately validate it again with Step 3. " +
+
+                        "Do not stop until your self-validation check passes.")
+//                .outputSchema(PROPERTY_INFORMATION)
+                .tools(
+                        FunctionTool.create(Tools.class, "extractPageContentAndImages"),
+                        FunctionTool.create(Tools.class, "validatePropertyJson")
+                )
                 .build();
     }
 
     // The run your agent with Dev UI, the ROOT_AGENT should be a global public static variable.
-    public static BaseAgent ROOT_AGENT = createOrchestratorAgent();
+    public static BaseAgent ROOT_AGENT = createExtractorAgent();
 
     // NEW: Agent 3 - The Orchestrator. This is our new root agent.
     public static BaseAgent createOrchestratorAgent() {
@@ -135,17 +164,24 @@ public class CMAgent {
         return LlmAgent.builder()
                 .name("orchestrator_agent")
                 .model(USED_MODEL_NAME)
-                .description("A real estate assistant that extracts property details and image URLs from a webpage.")
+                .description("The master agent that manages the workflow of browsing, extracting, and validating data.")
                 .instruction(
-                        "You are a master real estate analyst. Your goal is to extract structured data from a user-provided URL. "
-                                + "You must do this in two steps: "
-                                + "1. First, call the 'browser_agent' with the URL. This will return a JSON object " +
-                                "containing 'pageText' and 'imageUrls'. "
-                                + "2. Second, take the entire JSON object returned by the browser and pass it as input " +
-                                "to the 'extractor_agent' to get the final structured data. Make sure to include both " +
-                                "the text and the list of image URLs in the prompt for the extractor."
+                        "You are the master controller. Your goal is to extract, validate, and return a clean, unwrapped JSON object. " +
+                        "You MUST follow these steps: " +
+
+                        "Step 1: Call 'browser_agent' to get page content. " +
+
+                        "Step 2: Call 'extractor_agent' with the content. This will return a **wrapped object**. " +
+                        "This is an intermediate result, NOT the final answer. " +
+
+                        "Step 3: **MANDATORY VALIDATION.** You MUST call your 'validatePropertyJson' tool. The input for this tool is the **entire wrapped object** from Step 2. " +
+
+                        "Step 4: Check the validation result. " +
+                        "   - If 'isValid' is true, your job is almost done. The data is good. **You MUST now unwrap the final answer.** Your final response to the user must be ONLY the value of the 'candidateData' key from the wrapped object. Do not return the wrapper. " +
+                        "   - If 'isValid' is false, you MUST loop. Call the 'extractor_agent' again with the original content and the error message to get a new wrapped object, then go back to Step 3. "
                 )
                 .subAgents(browser, extractor)
+                .tools(FunctionTool.create(Tools.class, "validatePropertyJson"))
                 .build();
     }
 
@@ -177,4 +213,5 @@ public class CMAgent {
             }
         }
     }
+
 }

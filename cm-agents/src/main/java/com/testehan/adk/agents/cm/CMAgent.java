@@ -22,12 +22,30 @@ public class CMAgent {
 
     private static final String USED_MODEL_NAME = "gemini-2.5-pro";
     private static String USER_ID = "casamia";
+    public static final String MASTER_ORCHESTRATOR_AGENT_NAME = "master_orchestrator_agent";
+    private static final String API_SCOUT_AGENT_NAME = "api_scout_agent";
     private static final String EXTRACTOR_AGENT_NAME = "extractor_agent";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CMAgent.class);
 
+    // Agent 1 - The API Scout. Its only job is to call the API.
+    public static BaseAgent createApiScoutAgent() {
+        return LlmAgent.builder()
+                .name(API_SCOUT_AGENT_NAME)
+                .model(USED_MODEL_NAME)
+                .description("This agent calls an API and extracts a clean list of URLs from the tool's response.")
+                .instruction(
+                        "You are an API client that extracts data. " +
+                        "You must call the 'getUrlsFromApi' tool. " +
+                        "The tool will return a map containing a 'status' and a 'urls' key. " +
+                        "Your final output MUST be ONLY the value of the 'urls' key. " +
+                        "Return the raw JSON array of URLs and nothing else. Do not include 'status', commentary, or any other text."
+                )
+                .tools(FunctionTool.create(Tools.class, "getUrlsFromApi"))
+                .build();
+    }
 
-    // Agent 1 - The Extractor Agent. Its only job is to extract data and make sure it is valid.
+    // Agent 2 - The Extractor Agent. Its only job is to extract data and make sure it is valid.
     public static BaseAgent createExtractorAgent() {
         // First, get the schema definition as a string to embed in the prompt.
         final String schemaDefinition =  PROPERTY_INFORMATION.toJson();
@@ -67,8 +85,38 @@ public class CMAgent {
                 .build();
     }
 
+    // Agent 3 - The Master Orchestrator with Looping Logic. This is the new Root Agent.
+    public static BaseAgent createOrchestratorAgent() {
+        // The orchestrator needs to know about its sub-agents.
+        BaseAgent apiScout = createApiScoutAgent();
+        BaseAgent extractor = createExtractorAgent();
+
+        return LlmAgent.builder()
+                .name(MASTER_ORCHESTRATOR_AGENT_NAME)
+                .model(USED_MODEL_NAME)
+                .description("Manages a data pipeline by fetching a list of URLs and then looping through them to call an extractor agent for each.")
+                .subAgents(apiScout, extractor)
+                .instruction(
+                        "You are a master workflow controller for a data pipeline. Your ONLY goal is to produce a final JSON array of structured property data. " +
+                        "You MUST perform this as a multi-step process and MUST NOT stop until the final step is complete. " +
+
+                        "Step 1: You will be given an API endpoint URL. You must call the 'api_scout_agent'. " +
+                        "This will return a clean JSON array of URLs to be processed. " +
+
+                        "Step 2: **You must not report this list of URLs to the user.** This is intermediate data for your use only. " +
+                        "You will now iterate through the list of URLs. For **each URL in the list, one by one**, you will perform the next step. " +
+
+                        "Step 3: Take the current property URL from the list and pass it as input to the 'extractor_agent'. " +
+
+                        "Step 4: After you have processed **ALL** the URLs from the list, your final task is to assemble the results. " +
+                        "Your final answer MUST be a single, well-formatted **JSON array that contains all the individual property JSON objects** you collected. " +
+                        "Do not say anything else. Your entire output should start with `[` and end with `]`."
+                )
+                .build();
+    }
+
     // The run your agent with Dev UI, the ROOT_AGENT should be a global public static variable.
-    public static BaseAgent ROOT_AGENT = createExtractorAgent();
+    public static BaseAgent ROOT_AGENT = createOrchestratorAgent();
 
     public static void main(String[] args) throws Exception {
         // We now initialize the runner with our single ROOT_AGENT, the orchestrator.

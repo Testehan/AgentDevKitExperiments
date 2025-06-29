@@ -18,10 +18,14 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static com.testehan.adk.agents.cm.config.ConfigLoader.getApiEndpointPassword;
+import static com.testehan.adk.agents.cm.config.ConfigLoader.getApiEndpointUsername;
 
 public class Tools {
 
@@ -66,16 +70,25 @@ public class Tools {
     )
     public static Map<String, Object> getUrlsFromApi(@Annotations.Schema(name = "apiEndpoint", description = "The endpoint for which the retrieval must be done") String apiEndpoint) {
         LOGGER.info("Tool called: Fetching URLs from API endpoint: {}", apiEndpoint);
+
+        // --- BASIC AUTHENTICATION LOGIC ---
+        String authString = getApiEndpointUsername() + ":" + getApiEndpointPassword();
+        String encodedAuthString = Base64.getEncoder().encodeToString(authString.getBytes());
+        String authHeaderValue = "Basic " + encodedAuthString;
+
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(apiEndpoint))
                 .header("Accept", "application/json") // Good practice to specify expected content type
+                .header("Authorization", authHeaderValue)
                 .build();
         try {
             // Send the request and get the response
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-            // Check if the request was successful
+            if (response.statusCode() == 401) { // Unauthorized
+                return Map.of("status", "error", "message", "API call failed. The provided credentials were an incorrect (Unauthorized).");
+            }
             if (response.statusCode() != 200) {
                 return Map.of("status", "error", "message", "API call failed with status code: " + response.statusCode());
             }

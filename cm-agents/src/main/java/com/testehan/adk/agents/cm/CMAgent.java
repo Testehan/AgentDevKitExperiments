@@ -49,61 +49,13 @@ public class CMAgent {
 
     // Agent 2 - The Extractor Agent. Its only job is to extract data and make sure it is valid.
     public static BaseAgent createExtractorAgent() {
-        // First, get the schema definition as a string to embed in the prompt.
-        final String schemaDefinition =  PROPERTY_INFORMATION.toJson();
-        LOGGER.info("schemaDefinition {}", schemaDefinition);
-
         return LlmAgent.builder()
                 .name(EXTRACTOR_AGENT_NAME)
-                .model(USED_MODEL_NAME)
-                .description("An expert agent that extracts real estate information, validates it to see if it respects the given schema, and finally returns the correct data.")
-                .instruction("You are a highly capable and meticulous data analyst. Your goal is to produce a single, final JSON string. " +
-                            "You will be given a URL to process via the '{url_to_use}' variable." +
-
-                            "HERE IS THE SCHEMA DEFINITION YOUR FINAL JSON STRING MUST ADHERE TO: \n" +
-                            "--- SCHEMA START --- \n" +
-                            schemaDefinition + "\n" +
-                            "--- SCHEMA END --- \n\n" +
-
-                            "**YOUR PROCESS IS STRICT AND MUST BE FOLLOWED EXACTLY:** \n" +
-                            "1. **Call the `extractPageContentAndImages` tool EXACTLY ONCE.** This is your only opportunity to get data from the URL. \n" +
-
-                            "2. **DO NOT call `extractPageContentAndImages` again.** After the first and only tool call is complete, you MUST work only with the content provided in the tool's response. \n" +
-
-                            "3. Analyze the tool's response content. Based *only* on that content and the schema definition, generate the final JSON string. \n" +
-
-                            "4. Your final answer MUST be ONLY the raw JSON string. Do not wrap it in markdown or add any other text. Your entire output must start with `{` and end with `}`."
-                        )
-
-                .tools(
-                        FunctionTool.create(Tools.class, "extractPageContentAndImages")//,
-                   //     FunctionTool.create(Tools.class, "validatePropertyJson")
-                )
-                .outputKey("listing_json")
-                .build();
-    }
-
-    /*
-     +
-
-                        "3. **MANDATORY SELF-VALIDATION:** Call the 'validatePropertyJson' tool to check the JSON string you just created in Step 2. \n" +
-
-                        "4. **CHECK THE RESULT:** \n" +
-                        "   - If the validation tool returns 'isValid: true', your job is done. " +
-                        "     **Your final answer MUST be the raw JSON string itself, without any Markdown formatting, code blocks, or extra words.** " +
-                        "     It must start with `{` and end with `}`. " +
-                        "   - If the validation tool returns 'isValid: false', you have made an error. You MUST NOT return the broken string. Instead, read the error message, go back to Step 2, and create a NEW, corrected JSON string, then immediately validate it again with Step 3. " +
-                        "   - **If you have tried more than 3 times and are still failing, STOP and output an error message saying 'ERROR: Failed to generate valid JSON after 3 attempts.'**"
-     */
-
-    public static BaseAgent createScraperAgent() {
-        return LlmAgent.builder()
-                .name("scraper_agent")
                 // A simple, cheap model is fine for this.
                 .model(USED_MODEL_NAME)
                 .description("This agent calls uses extractPageContentAndImages using the provided url")
                 .instruction("Your only job is to call the 'extractPageContentAndImages' tool using the provided '{url_to_use}'. " +
-                        "After you get the result from the tool, your job is done. Output the raw result from the tool directly.")
+                            "After you get the result from the tool, your job is done. Output the raw result from the tool directly.")
                 .tools(FunctionTool.create(Tools.class, "extractPageContentAndImages"))
                 // We'll capture the output under a new key.
                 .outputKey("scraper_output")
@@ -137,30 +89,13 @@ public class CMAgent {
     public static BaseAgent createOrchestratorAgent() {
         // The orchestrator needs to know about its sub-agents.
         BaseAgent apiScout = createApiScoutAgent();
-        BaseAgent extractor = createScraperAgent();
+        BaseAgent extractor = createExtractorAgent();
         BaseAgent formatter = createFormatterAgent();
 
         return SequentialAgent.builder()
                 .name(MASTER_ORCHESTRATOR_AGENT_NAME)
-                //.model(USED_MODEL_NAME)
                 .description("Manages a data pipeline by fetching a list of URLs and then looping through them to call an extractor agent for each.")
                 .subAgents(apiScout, new LoopingProcessorAgent(extractor,formatter))
-//                .instruction(
-//                        "You are a master workflow controller for a data pipeline. Your ONLY goal is to produce a final JSON array of structured property data. " +
-//                        "You MUST perform this as a multi-step process and MUST NOT stop until the final step is complete. " +
-//
-//                        "Step 1: You will be given an API endpoint URL. You must call the 'api_scout_agent'. " +
-//                        "This will return a clean JSON array of URLs to be processed. " +
-//
-//                        "Step 2: **You must not report this list of URLs to the user.** This is intermediate data for your use only. " +
-//                        "You will now iterate through the list of URLs. For **each URL in the list, one by one**, you will perform the next step. " +
-//
-//                        "Step 3: Take the current property URL from the list and pass it as input to the 'extractor_agent'. " +
-//
-//                        "Step 4: After you have processed **ALL** the URLs from the list, your final task is to assemble the results. " +
-//                        "Your final answer MUST be a single, well-formatted **JSON array that contains all the individual property JSON objects** you collected. " +
-//                        "Do not say anything else. Your entire output should start with `[` and end with `]`."
-//                )
                 .build();
     }
 
@@ -190,16 +125,16 @@ public class CMAgent {
                 // The orchestrator's LLM will now handle the logic of calling the
                 // browser and then the extractor for us.
                 System.out.print("\nAgent > ");
-//                runner.runAsync(USER_ID, session.id(), userMsg).blockingSubscribe();
+
                 Event finalEvent = runner.runAsync(USER_ID, session.id(), userMsg).blockingLast();
 
                 final String OUTPUT_KEY = "final_property_list";
-               String finalPropertyList = (String) finalEvent.actions().stateDelta().get(OUTPUT_KEY);
+                String finalPropertyList = (String) finalEvent.actions().stateDelta().get(OUTPUT_KEY);
 
                 if (finalPropertyList != null) {
-                    System.out.println("✅✅✅ SUCCESS! Retrieved : \n" + finalPropertyList);
+                    LOGGER.info("✅✅✅ SUCCESS! Retrieved : \n {}", finalPropertyList);
                 } else {
-                    System.out.println("❌ FAILED: The final property list was not found in the session state.");
+                    LOGGER.info("❌ FAILED: The final property list was not found in the session state.");
                 }
             }
         }

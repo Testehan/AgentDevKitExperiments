@@ -50,7 +50,7 @@ public class LoopingProcessorAgent extends BaseAgent {
         List<String> urlsToProcess = new ArrayList<>();
         try {
             urlsToProcess = OBJECT_MAPPER.readValue(jsonUrls, List.class);
-            ctx.session().state().put("urls","");       // remove the urls from context so that the LLM is not confused
+//            ctx.session().state().put("urls","");       // remove the urls from context so that the LLM is not confused
         } catch (JsonProcessingException e) {
             LOGGER.error("LoopingProcessorAgent received invalid json array of URLs to process. {}", jsonUrls);
         }
@@ -64,29 +64,29 @@ public class LoopingProcessorAgent extends BaseAgent {
             ctx.session().state().put("url_to_use",url);
 
             // --- RUN THE FIRST AGENT ---
-//            System.out.println("--- 🚀 RUNNING SCRAPER AGENT ---");
+            LOGGER.info("--- 🚀 RUNNING SCRAPER AGENT ---");
+            // i abandoned investigathing why the line from below gets stuck in a loop...so i just call the tool directly
+            // to get the content of the page.
 //            extractorAgent.runAsync(ctx).blockingForEach(event -> System.out.println("SCRAPER EVENT: " + event.toJson()));
             HumanizedBrowsing humanizedBrowsing = new HumanizedBrowsing();
             Map<String, Object> scraperOutput =  humanizedBrowsing.browseUrl(url);
 
-
             // The result of the first agent is now in the context under "scraper_output"
-            String scraperOutputString = "Page Text: " + scraperOutput.get("pageText") +
-                    " \n\nImage URLs: " + scraperOutput.get("imageUrls");
-            System.out.println("\n--- ✅ SCRAPER FINISHED. Raw output: ---\n" + scraperOutputString);
+            String scraperOutputString = "Page Text: " + scraperOutput.get("pageText") + "\n\n" +
+                                          "Image URLs: " + scraperOutput.get("imageUrls");
+            LOGGER.info("\n--- ✅ SCRAPER FINISHED. Raw output: ---\n {}", scraperOutputString);
 
             // --- RUN THE SECOND AGENT ---
-            // Pass the scraper's output as the input for the formatter agent
+            // Pass the extractor's output as the input for the formatter agent
             ctx.session().state().put("scraped_text", scraperOutputString);
 
-            System.out.println("\n--- 🚀 RUNNING FORMATTER AGENT ---");
+            LOGGER.info("\n--- 🚀 RUNNING FORMATTER AGENT ---");
             Event finalEvent = formatterAgent.runAsync(ctx).blockingLast();
 
-            System.out.println("FORMATTER FINAL EVENT: " + finalEvent.toJson());
+            LOGGER.info("FORMATTER FINAL EVENT: \n {}", finalEvent.toJson());
 
             String rawOutput = "";
-            // The final response from the agent is an Event. We can get the text directly
-            // from its content.
+            // The final response from the agent is an Event. We can get the text directly from its content.
             if (finalEvent != null && "formatter_agent".equals(finalEvent.author())) {
                 // The content() method on the Event gives us the payload.
                 // The text() method on Content concatenates all parts into a single string.
@@ -98,8 +98,6 @@ public class LoopingProcessorAgent extends BaseAgent {
             // The (?s) flag allows '.' to match newline characters.
             String resultJson = rawOutput.replaceFirst("(?s)```json\\s*", "").replaceFirst("(?s)```\\s*$", "");
 
-            // The final, clean JSON is now in the context
-//            String resultJson = (String) ctx.session().state().get("listing_json");
 
             if (Objects.nonNull(resultJson) && !resultJson.trim().isEmpty()) {
                 LOGGER.info("Successfully extracted data for URL: {}", url);
@@ -123,16 +121,12 @@ public class LoopingProcessorAgent extends BaseAgent {
             ConcurrentMap<String, Object> stateUpdate = new ConcurrentHashMap<>();
 
             // 2. Put your final result into this map.
-            //    The value (a String) is a valid Object, so this works.
             stateUpdate.put(OUTPUT_KEY, finalOutput);
 
             // Create the final event that will carry the result.
             Event finalResultEvent = Event.builder()
-                    .author(this.name()) // Set the author to this agent's name
-                    //.content(Content.fromJson(finalOutput)) // The actual content for logging
-                    .actions(
-                                EventActions.builder().stateDelta(stateUpdate).build()
-                            )
+                    .author(this.name())
+                    .actions(EventActions.builder().stateDelta(stateUpdate).build())
                     .build();
 
             // Return the final event as a stream that emits this one item and then completes.
@@ -142,11 +136,6 @@ public class LoopingProcessorAgent extends BaseAgent {
             // If anything goes wrong, return a stream that emits an error.
             return Flowable.error(e);
         }
-
-
-        // Step 5: Return the final, aggregated result wrapped in a Content event.
-        // This is the correct way for a custom agent to produce its final output.
-      //  return Flowable.just(Event.fromJson(finalOutput));
     }
 
     @Override

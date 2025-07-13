@@ -3,7 +3,6 @@ package com.testehan.adk.agents.cm;
 import com.google.adk.agents.BaseAgent;
 import com.google.adk.agents.LlmAgent;
 import com.google.adk.agents.SequentialAgent;
-import com.google.adk.events.Event;
 import com.google.adk.runner.InMemoryRunner;
 import com.google.adk.sessions.Session;
 import com.google.adk.tools.FunctionTool;
@@ -136,15 +135,25 @@ public class CMAgent {
 
         Content apiUrl = Content.fromParts(Part.fromText(ConfigLoader.getApiEndpoint()));
 
-        Event finalEvent = runner.runAsync(USER_ID, session.id(), apiUrl).blockingLast();
+        runner.runAsync(USER_ID, session.id(), apiUrl)
+            .filter(event -> {
+                // We only want to process events that have a non-null stateDelta
+                // and contain our specific result key.
+                if (event.actions() == null || event.actions().stateDelta() == null) {
+                    return false; // Discard events without a stateDelta.
+                }
+                // Keep the event only if it contains the "individual_json_result" key.
+                return event.actions().stateDelta().containsKey(OUTPUT_MASTER_ORCHESTRATOR);
+            })
+            .blockingForEach(event -> {
+                String individualJson = (String) event.actions()
+                        .stateDelta()
+                        .get(OUTPUT_MASTER_ORCHESTRATOR);
 
-        String finalPropertyList = (String) finalEvent.actions().stateDelta().get(OUTPUT_MASTER_ORCHESTRATOR);
-
-        if (finalPropertyList != null) {
-            LOGGER.info("✅✅✅ SUCCESS! Retrieved : \n {}", finalPropertyList);
-        } else {
-            LOGGER.info("❌ FAILED: The final property list was not found in the session state.");
-        }
+                if (individualJson != null && !individualJson.isEmpty()) {
+                    LOGGER.info("✅ Received a result: \n{}", individualJson);
+                }
+            });
     }
 
 }

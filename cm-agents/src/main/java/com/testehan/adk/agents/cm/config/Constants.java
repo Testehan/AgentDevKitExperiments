@@ -12,7 +12,7 @@ public class Constants {
     public static final String FORMATTER_AGENT = "formatter_agent";
 
     public static final String OUTPUT_SCOUT_AGENT = "urls";
-    public static final String OUTPUT_MASTER_ORCHESTRATOR= "final_property_list";
+    public static final String OUTPUT_MASTER_ORCHESTRATOR= "individual_json_result";
 
     public static final String TOOL_GET_URLS = "getUrlsFromApi";
     public static final String TOOL_EXTRACT = "extractPageContentAndImages";

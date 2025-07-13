@@ -10,16 +10,13 @@ import com.google.adk.tools.FunctionTool;
 import com.google.genai.types.Content;
 import com.google.genai.types.Part;
 import com.testehan.adk.agents.cm.agents.LoopingProcessorAgent;
+import com.testehan.adk.agents.cm.config.ConfigLoader;
 import com.testehan.adk.agents.cm.tools.Tools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Scanner;
-
-import static com.testehan.adk.agents.cm.config.Constants.*;
-
 import static com.testehan.adk.agents.cm.Schemas.PROPERTY_INFORMATION;
+import static com.testehan.adk.agents.cm.config.Constants.*;
 
 
 public class CMAgent {
@@ -103,32 +100,16 @@ public class CMAgent {
                 .createSession(ROOT_AGENT.name(), USER_ID)
                 .blockingGet();
 
-        try (Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8)) {
-            while (true) {
-                System.out.print("\nYou > ");
-                String userInput = scanner.nextLine();
+        Content apiUrl = Content.fromParts(Part.fromText(ConfigLoader.getApiEndpoint()));
 
-                if ("quit".equalsIgnoreCase(userInput)) {
-                    break;
-                }
+        Event finalEvent = runner.runAsync(USER_ID, session.id(), apiUrl).blockingLast();
 
-                // The user's input is sent directly to the orchestrator agent.
-                Content userMsg = Content.fromParts(Part.fromText(userInput));
+        String finalPropertyList = (String) finalEvent.actions().stateDelta().get(OUTPUT_MASTER_ORCHESTRATOR);
 
-                // The orchestrator's LLM will now handle the logic of calling the
-                // browser and then the extractor for us.
-                System.out.print("\nAgent > ");
-
-                Event finalEvent = runner.runAsync(USER_ID, session.id(), userMsg).blockingLast();
-
-                String finalPropertyList = (String) finalEvent.actions().stateDelta().get(OUTPUT_MASTER_ORCHESTRATOR);
-
-                if (finalPropertyList != null) {
-                    LOGGER.info("✅✅✅ SUCCESS! Retrieved : \n {}", finalPropertyList);
-                } else {
-                    LOGGER.info("❌ FAILED: The final property list was not found in the session state.");
-                }
-            }
+        if (finalPropertyList != null) {
+            LOGGER.info("✅✅✅ SUCCESS! Retrieved : \n {}", finalPropertyList);
+        } else {
+            LOGGER.info("❌ FAILED: The final property list was not found in the session state.");
         }
     }
 

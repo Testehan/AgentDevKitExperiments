@@ -24,6 +24,10 @@ public class ConfigLoader {
         return PROPERTIES.getProperty("scraperapi.key");
     }
 
+    public static String getApiEndpoint() {
+        return PROPERTIES.getProperty("api.endpoint");
+    }
+
     public static String getApiEndpointUsername() {
         return PROPERTIES.getProperty("api.endpoint.user.name");
     }

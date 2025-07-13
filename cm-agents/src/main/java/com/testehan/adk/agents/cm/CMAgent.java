@@ -15,6 +15,10 @@ import com.testehan.adk.agents.cm.tools.Tools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 import static com.testehan.adk.agents.cm.Schemas.PROPERTY_INFORMATION;
 import static com.testehan.adk.agents.cm.config.Constants.*;
 
@@ -93,6 +97,36 @@ public class CMAgent {
     public static BaseAgent ROOT_AGENT = createOrchestratorAgent();
 
     public static void main(String[] args) throws Exception {
+        // Create a single-threaded executor that can schedule commands.
+        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+
+        // Define the task that will be executed periodically.
+        Runnable agentRunner = () -> {
+            try {
+                LOGGER.info("EXECUTING: Starting the orchestrator agent run...");
+
+                runRootAgent();
+
+                LOGGER.info("SUCCESS: Orchestrator agent run finished.");
+
+            } catch (Exception e) {
+                // It's crucial to catch exceptions, otherwise the scheduler
+                // will stop executing the task if it throws an unhandled exception.
+                LOGGER.error("ERROR: An exception occurred during agent execution: {}", e.getMessage());
+                e.printStackTrace();
+            }
+        };
+
+        LOGGER.info("Scheduler initialized. The agent will run every 3 hours.");
+        scheduler.scheduleAtFixedRate(agentRunner, 0, 5, TimeUnit.HOURS);
+
+        // This application will keep running because the scheduler thread is active.
+        // In a real server application, you would manage the lifecycle and
+        // implement a graceful shutdown of the scheduler when the app terminates.
+
+    }
+
+    private static void runRootAgent() {
         // We now initialize the runner with our single ROOT_AGENT, the orchestrator.
         InMemoryRunner runner = new InMemoryRunner(ROOT_AGENT);
 

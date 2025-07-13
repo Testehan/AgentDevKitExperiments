@@ -17,15 +17,13 @@ import org.slf4j.LoggerFactory;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
+import static com.testehan.adk.agents.cm.config.Constants.*;
+
 import static com.testehan.adk.agents.cm.Schemas.PROPERTY_INFORMATION;
+
 
 public class CMAgent {
 
-    private static final String USED_MODEL_NAME = "gemini-2.5-pro";
-    private static String USER_ID = "casamia";
-    public static final String MASTER_ORCHESTRATOR_AGENT_NAME = "master_orchestrator_agent";
-    private static final String API_SCOUT_AGENT_NAME = "api_scout_agent";
-    private static final String EXTRACTOR_AGENT_NAME = "extractor_agent";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CMAgent.class);
 
@@ -66,7 +64,7 @@ public class CMAgent {
         final String schemaDefinition = PROPERTY_INFORMATION.toJson();
 
         return LlmAgent.builder()
-                .name("formatter_agent")
+                .name(FORMATTER_AGENT)
                 .model(USED_MODEL_NAME)
                 .description("This agent takes raw input and formats it")
                 // The input is now a variable named 'scraped_text'.

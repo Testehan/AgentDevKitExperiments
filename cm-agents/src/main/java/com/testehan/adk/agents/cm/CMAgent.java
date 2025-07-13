@@ -10,6 +10,7 @@ import com.google.genai.types.Content;
 import com.google.genai.types.Part;
 import com.testehan.adk.agents.cm.agents.LoopingProcessorAgent;
 import com.testehan.adk.agents.cm.config.ConfigLoader;
+import com.testehan.adk.agents.cm.tools.ListingUploader;
 import com.testehan.adk.agents.cm.tools.Tools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -133,7 +134,7 @@ public class CMAgent {
                 .createSession(ROOT_AGENT.name(), USER_ID)
                 .blockingGet();
 
-        Content apiUrl = Content.fromParts(Part.fromText(ConfigLoader.getApiEndpoint()));
+        Content apiUrl = Content.fromParts(Part.fromText(ConfigLoader.getApiEndpointGetLeads()));
 
         runner.runAsync(USER_ID, session.id(), apiUrl)
             .filter(event -> {
@@ -152,6 +153,8 @@ public class CMAgent {
 
                 if (individualJson != null && !individualJson.isEmpty()) {
                     LOGGER.info("✅ Received a result: \n{}", individualJson);
+                    ListingUploader uploader = new ListingUploader();
+                    uploader.upload(individualJson);
                 }
             });
     }

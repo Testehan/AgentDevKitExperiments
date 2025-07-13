@@ -50,7 +50,7 @@ public class Schemas {
                                             .build(),
                                     "floor",
                                     Schema.builder()
-                                            .type("INTEGER")
+                                            .type("String")
                                             .description("Floor of the apartment.")
                                             .build(),
                                     "ownerName",

@@ -24,7 +24,6 @@ import static com.testehan.adk.agents.cm.Schemas.PROPERTY_INFORMATION;
 
 public class CMAgent {
 
-
     private static final Logger LOGGER = LoggerFactory.getLogger(CMAgent.class);
 
     // Agent 1 - The API Scout. Its only job is to call the API.
@@ -35,13 +34,13 @@ public class CMAgent {
                 .description("This agent calls an API and extracts a clean list of URLs from the tool's response.")
                 .instruction(
                         "You are an API client that extracts data. " +
-                        "You must call the 'getUrlsFromApi' tool. " +
+                        "You must call the '" + TOOL_GET_URLS + "' tool. " +
                         "The tool will return a map containing a 'status' and a 'urls' key. " +
                         "Your final output MUST be ONLY the value of the 'urls' key. " +
                         "Return the raw JSON array of URLs and nothing else. Do not include 'status', commentary, or any other text."
                 )
-                .tools(FunctionTool.create(Tools.class, "getUrlsFromApi"))
-                .outputKey("urls") // Key for storing output in session state
+                .tools(FunctionTool.create(Tools.class, TOOL_GET_URLS))
+                .outputKey(OUTPUT_SCOUT_AGENT) // Key for storing output in session state
                 .build();
     }
 
@@ -49,14 +48,11 @@ public class CMAgent {
     public static BaseAgent createExtractorAgent() {
         return LlmAgent.builder()
                 .name(EXTRACTOR_AGENT_NAME)
-                // A simple, cheap model is fine for this.
                 .model(USED_MODEL_NAME)
                 .description("This agent calls uses extractPageContentAndImages using the provided url")
-                .instruction("Your only job is to call the 'extractPageContentAndImages' tool using the provided '{url_to_use}'. " +
+                .instruction("Your only job is to call the '" + TOOL_EXTRACT + "' tool using the provided '{url_to_use}'. " +
                             "After you get the result from the tool, your job is done. Output the raw result from the tool directly.")
-                .tools(FunctionTool.create(Tools.class, "extractPageContentAndImages"))
-                // We'll capture the output under a new key.
-                .outputKey("scraper_output")
+                .tools(FunctionTool.create(Tools.class, TOOL_EXTRACT))
                 .build();
     }
 
@@ -78,7 +74,6 @@ public class CMAgent {
 
                         "Based *only* on the provided content and the schema definition, generate the final JSON string." +
                         "Your final answer MUST be ONLY the raw JSON string. Do not wrap it in markdown or add any other text. Your entire output must start with `{` and end with `}`.")
-                .outputKey("listing_json") // The final output key.
                 .build();
     }
 
@@ -126,8 +121,7 @@ public class CMAgent {
 
                 Event finalEvent = runner.runAsync(USER_ID, session.id(), userMsg).blockingLast();
 
-                final String OUTPUT_KEY = "final_property_list";
-                String finalPropertyList = (String) finalEvent.actions().stateDelta().get(OUTPUT_KEY);
+                String finalPropertyList = (String) finalEvent.actions().stateDelta().get(OUTPUT_MASTER_ORCHESTRATOR);
 
                 if (finalPropertyList != null) {
                     LOGGER.info("✅✅✅ SUCCESS! Retrieved : \n {}", finalPropertyList);

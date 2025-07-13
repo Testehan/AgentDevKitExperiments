@@ -8,8 +8,6 @@ import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
 import com.networknt.schema.ValidationMessage;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +24,7 @@ import java.util.stream.Collectors;
 
 import static com.testehan.adk.agents.cm.config.ConfigLoader.getApiEndpointPassword;
 import static com.testehan.adk.agents.cm.config.ConfigLoader.getApiEndpointUsername;
+import static com.testehan.adk.agents.cm.config.Constants.*;
 
 public class Tools {
 
@@ -65,7 +64,7 @@ public class Tools {
      * @return A map containing the status and a list of URLs found.
      */
     @Annotations.Schema(
-            name = "getUrlsFromApi",
+            name = TOOL_GET_URLS,
             description = "Navigates to an API to get the list of URLs that must be processed."
     )
     public static Map<String, Object> getUrlsFromApi(@Annotations.Schema(name = "apiEndpoint", description = "The endpoint for which the retrieval must be done") String apiEndpoint) {
@@ -98,7 +97,7 @@ public class Tools {
             List<String> urls = OBJECT_MAPPER.readValue(responseBody, new TypeReference<>() {});
 
             LOGGER.info("Successfully fetched {} URLs from the API.", urls.size());
-            return Map.of("status", "success", "urls", urls);
+            return Map.of("status", "success", OUTPUT_SCOUT_AGENT, urls);
 
         } catch (Exception e) {
             LOGGER.error("An error occurred while calling the API", e);
@@ -106,31 +105,8 @@ public class Tools {
         }
     }
 
-    // todo rename method name to something related to "listings"
-    public static Map<String, String> getTextFromUrl(
-            @Annotations.Schema(name = "getTextFromUrl", description = "The url for which the retrieval must be done")
-            String url) {
-        LOGGER.info("Tool called: Fetching content from {}", url);
-        try {
-            // Use JSoup to connect to the URL, get the HTML, and return its text
-            Document doc = Jsoup.connect(url).get();
-            String text = doc.text();
-
-            LOGGER.info("Obtained the following text: {}",text);
-
-            return Map.of(
-                    "status", "success",
-                    "report", text);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return Map.of(
-                    "status", "error",
-                    "report", "Error: Could not fetch content from the URL.");
-        }
-    }
-
     @Annotations.Schema(
-            name = "extractPageContentAndImages",
+            name = TOOL_EXTRACT,
             description = "Navigates to a URL using a headless browser to get the full page text and all visible image URLs."
     )
     public static Map<String, Object> extractPageContentAndImages(

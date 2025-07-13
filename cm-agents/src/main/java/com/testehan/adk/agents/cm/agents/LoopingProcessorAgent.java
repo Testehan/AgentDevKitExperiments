@@ -18,6 +18,8 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import static com.testehan.adk.agents.cm.config.Constants.*;
+
 public class LoopingProcessorAgent extends BaseAgent {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LoopingProcessorAgent.class);
@@ -46,11 +48,10 @@ public class LoopingProcessorAgent extends BaseAgent {
     @Override
     protected Flowable<Event> runAsyncImpl(InvocationContext ctx) {
         // Step 1: Get the input from the previous agent
-        String jsonUrls = (String) ctx.session().state().get("urls");
+        String jsonUrls = (String) ctx.session().state().get(OUTPUT_SCOUT_AGENT);
         List<String> urlsToProcess = new ArrayList<>();
         try {
             urlsToProcess = OBJECT_MAPPER.readValue(jsonUrls, List.class);
-//            ctx.session().state().put("urls","");       // remove the urls from context so that the LLM is not confused
         } catch (JsonProcessingException e) {
             LOGGER.error("LoopingProcessorAgent received invalid json array of URLs to process. {}", jsonUrls);
         }
@@ -113,15 +114,12 @@ public class LoopingProcessorAgent extends BaseAgent {
 
 
         try {
-            // This is the key the user of your agent will use to get the result.
-            // You should define this as a constant in your agent class.
-            final String OUTPUT_KEY = "final_property_list";
 
             // 1. Create a new ConcurrentHashMap with the EXACT required types.
             ConcurrentMap<String, Object> stateUpdate = new ConcurrentHashMap<>();
 
             // 2. Put your final result into this map.
-            stateUpdate.put(OUTPUT_KEY, finalOutput);
+            stateUpdate.put(OUTPUT_MASTER_ORCHESTRATOR, finalOutput);
 
             // Create the final event that will carry the result.
             Event finalResultEvent = Event.builder()

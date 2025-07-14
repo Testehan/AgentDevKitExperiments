@@ -21,7 +21,11 @@ public class ConfigLoader {
     }
 
     public static String getScraperApiKey() {
-        return PROPERTIES.getProperty("scraperapi.key");
+        return PROPERTIES.getProperty("scraper.api.key");
+    }
+
+    public static String getWhatsAppApiToken() {
+        return PROPERTIES.getProperty("whatsapp.api.access.token");
     }
 
     public static String getApiEndpointGetLeads() {

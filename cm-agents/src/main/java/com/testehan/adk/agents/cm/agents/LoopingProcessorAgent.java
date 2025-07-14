@@ -19,7 +19,7 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import static com.testehan.adk.agents.cm.config.Constants.OUTPUT_SCOUT_AGENT;
+import static com.testehan.adk.agents.cm.config.Constants.*;
 
 public class LoopingProcessorAgent extends BaseAgent {
 
@@ -91,7 +91,7 @@ public class LoopingProcessorAgent extends BaseAgent {
 
                     String rawOutput = "";
                     // The final response from the agent is an Event. We can get the text directly from its content.
-                    if (finalEvent != null && "formatter_agent".equals(finalEvent.author())) {
+                    if (finalEvent != null && FORMATTER_AGENT.equals(finalEvent.author())) {
                         // The content() method on the Event gives us the payload.
                         // The text() method on Content concatenates all parts into a single string.
                         rawOutput = finalEvent.content().get().text();
@@ -107,7 +107,8 @@ public class LoopingProcessorAgent extends BaseAgent {
                         LOGGER.info("Successfully extracted data for URL: {}", url);
                         ConcurrentMap<String, Object> stateUpdate = new ConcurrentHashMap<>();
 
-                        stateUpdate.put("individual_json_result", resultJson);
+                        stateUpdate.put(OUTPUT_MASTER_ORCHESTRATOR_LISTING, resultJson);
+                        stateUpdate.put(OUTPUT_MASTER_ORCHESTRATOR_URL, url);
 
                         // Build the event carrying this single result.
                         Event resultEvent = Event.builder()

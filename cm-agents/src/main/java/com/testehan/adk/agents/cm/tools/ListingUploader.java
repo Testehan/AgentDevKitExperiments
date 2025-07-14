@@ -29,7 +29,7 @@ public class ListingUploader {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ListingUploader.class);
 
-    public void upload(String listingJson) {
+    public void upload(String listingJson, String listingSourceUrl) {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
         try {
@@ -38,7 +38,7 @@ public class ListingUploader {
 
             try {
                 // Prepare the MultipartFile[] for images (if any)
-                MultiValueMap<String, Object> body = getPostListingRequestBody(listing);
+                MultiValueMap<String, Object> body = getPostListingRequestBody(listing, listingSourceUrl);
 
                 // Create a RestTemplate instance
                 RestTemplate restTemplate = new RestTemplate();
@@ -74,7 +74,7 @@ public class ListingUploader {
     }
 
     @NotNull
-    private static MultiValueMap<String, Object> getPostListingRequestBody(Listing listing) {
+    private static MultiValueMap<String, Object> getPostListingRequestBody(Listing listing, String listingSourceUrl) {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
 
         body.add("name", listing.name);
@@ -86,7 +86,6 @@ public class ListingUploader {
         body.add("surface", Integer.valueOf(listing.surface));
         body.add("noOfRooms", Integer.valueOf(listing.noOfRooms));
         body.add("floor", listing.floor);
-        body.add("contact", "123"); // TOdo
         body.add("ownerName", listing.ownerName);
         body.add("active", false);
         body.add("availableFrom", getAvailableFromToday());
@@ -119,6 +118,8 @@ public class ListingUploader {
                 }
             }
         }
+
+        body.add("listingSourceUrl", listingSourceUrl);
         return body;
     }
 
@@ -143,8 +144,6 @@ public class ListingUploader {
 }
 
 class Listing {
-//    @JsonProperty("Phone")        TODO
-//    public String phone;
     public String ownerName;
     public Integer price;
     public String city;

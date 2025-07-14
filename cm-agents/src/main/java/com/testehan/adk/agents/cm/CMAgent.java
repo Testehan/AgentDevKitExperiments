@@ -15,6 +15,7 @@ import com.testehan.adk.agents.cm.tools.Tools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -144,17 +145,17 @@ public class CMAgent {
                     return false; // Discard events without a stateDelta.
                 }
                 // Keep the event only if it contains the "individual_json_result" key.
-                return event.actions().stateDelta().containsKey(OUTPUT_MASTER_ORCHESTRATOR);
+                return event.actions().stateDelta().containsKey(OUTPUT_MASTER_ORCHESTRATOR_LISTING);
             })
             .blockingForEach(event -> {
-                String individualJson = (String) event.actions()
-                        .stateDelta()
-                        .get(OUTPUT_MASTER_ORCHESTRATOR);
+                ConcurrentMap<String, Object> stateDelta = event.actions().stateDelta();
+                String individualJson = (String) stateDelta.get(OUTPUT_MASTER_ORCHESTRATOR_LISTING);
+                String listingSourceUrl = (String) stateDelta.get(OUTPUT_MASTER_ORCHESTRATOR_URL);
 
                 if (individualJson != null && !individualJson.isEmpty()) {
                     LOGGER.info("✅ Received a result: \n{}", individualJson);
                     ListingUploader uploader = new ListingUploader();
-                    uploader.upload(individualJson);
+                    uploader.upload(individualJson,listingSourceUrl);
                 }
             });
     }

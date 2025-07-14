@@ -11,10 +11,10 @@ public class Constants {
     public static final String EXTRACTOR_AGENT_NAME = "extractor_agent";
     public static final String FORMATTER_AGENT = "formatter_agent";
 
-    public static final String OUTPUT_SCOUT_AGENT = "urls";
+    public static final String OUTPUT_SCOUT_AGENT = "scout_output";
     public static final String OUTPUT_MASTER_ORCHESTRATOR_LISTING = "individual_json_result";
     public static final String OUTPUT_MASTER_ORCHESTRATOR_URL = "listing_source_url";
 
-    public static final String TOOL_GET_URLS = "getUrlsFromApi";
+    public static final String TOOL_GET_STRINGS = "getStringsFromApi";
     public static final String TOOL_EXTRACT = "extractPageContentAndImages";
 }

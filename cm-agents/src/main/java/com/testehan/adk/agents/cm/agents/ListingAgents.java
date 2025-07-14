@@ -9,7 +9,7 @@ import com.testehan.adk.agents.cm.tools.Tools;
 import static com.testehan.adk.agents.cm.Schemas.PROPERTY_INFORMATION;
 import static com.testehan.adk.agents.cm.config.Constants.*;
 
-public class ListingAgent {
+public class ListingAgents {
 
     // Agent 1 - The API Scout. Its only job is to call the API.
     private static BaseAgent createApiScoutAgent() {
@@ -19,12 +19,12 @@ public class ListingAgent {
                 .description("This agent calls an API and extracts a clean list of URLs from the tool's response.")
                 .instruction(
                         "You are an API client that extracts data. " +
-                                "You must call the '" + TOOL_GET_URLS + "' tool. " +
-                                "The tool will return a map containing a 'status' and a 'urls' key. " +
-                                "Your final output MUST be ONLY the value of the 'urls' key. " +
+                                "You must call the '" + TOOL_GET_STRINGS + "' tool. " +
+                                "The tool will return a map containing a 'status' and a '" + OUTPUT_SCOUT_AGENT +"' key. " +
+                                "Your final output MUST be ONLY the value of the '" + OUTPUT_SCOUT_AGENT + "' key. " +
                                 "Return the raw JSON array of URLs and nothing else. Do not include 'status', commentary, or any other text."
                 )
-                .tools(FunctionTool.create(Tools.class, TOOL_GET_URLS))
+                .tools(FunctionTool.create(Tools.class, TOOL_GET_STRINGS))
                 .outputKey(OUTPUT_SCOUT_AGENT) // Key for storing output in session state
                 .build();
     }
@@ -74,7 +74,7 @@ public class ListingAgent {
         return SequentialAgent.builder()
                 .name(MASTER_ORCHESTRATOR_AGENT_NAME)
                 .description("Manages a data pipeline by fetching a list of URLs and then looping through them to call an extractor agent for each.")
-                .subAgents(apiScout, new LoopingProcessorAgent(extractor,formatter))
+                .subAgents(apiScout, new LoopingUrlsProcessorAgent(extractor,formatter))
                 .build();
     }
 

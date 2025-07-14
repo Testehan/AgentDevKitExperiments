@@ -11,7 +11,6 @@ import com.networknt.schema.ValidationMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -59,16 +58,16 @@ public class Tools {
     }
 
     /**
-     * Calls a given API endpoint to fetch a JSON array of URLs.
+     * Calls a given API endpoint to fetch a JSON array of strings representing URLs or phones.
      * @param apiEndpoint The full URL of the API to call.
-     * @return A map containing the status and a list of URLs found.
+     * @return A map containing the status and a list of strings found.
      */
     @Annotations.Schema(
-            name = TOOL_GET_URLS,
-            description = "Navigates to an API to get the list of URLs that must be processed."
+            name = TOOL_GET_STRINGS,
+            description = "Navigates to an API to get the list of strings that must be processed."
     )
-    public static Map<String, Object> getUrlsFromApi(@Annotations.Schema(name = "apiEndpoint", description = "The endpoint for which the retrieval must be done") String apiEndpoint) {
-        LOGGER.info("Tool called: Fetching URLs from API endpoint: {}", apiEndpoint);
+    public static Map<String, Object> getStringsFromApi(@Annotations.Schema(name = "apiEndpoint", description = "The endpoint for which the retrieval must be done") String apiEndpoint) {
+        LOGGER.info("Tool called: Fetching data from API endpoint: {}", apiEndpoint);
 
         // --- BASIC AUTHENTICATION LOGIC ---
         String authString = getApiEndpointUsername() + ":" + getApiEndpointPassword();
@@ -94,10 +93,10 @@ public class Tools {
 
             String responseBody = response.body();
             // Parse the JSON array of strings into a Java List<String>
-            List<String> urls = OBJECT_MAPPER.readValue(responseBody, new TypeReference<>() {});
+            List<String> strings = OBJECT_MAPPER.readValue(responseBody, new TypeReference<>() {});
 
-            LOGGER.info("Successfully fetched {} URLs from the API.", urls.size());
-            return Map.of("status", "success", OUTPUT_SCOUT_AGENT, urls);
+            LOGGER.info("Successfully fetched {} strings from the API.", strings.size());
+            return Map.of("status", "success", OUTPUT_SCOUT_AGENT, strings);
 
         } catch (Exception e) {
             LOGGER.error("An error occurred while calling the API", e);

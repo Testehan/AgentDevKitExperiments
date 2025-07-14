@@ -21,15 +21,15 @@ import java.util.concurrent.ConcurrentMap;
 
 import static com.testehan.adk.agents.cm.config.Constants.*;
 
-public class LoopingProcessorAgent extends BaseAgent {
+public class LoopingUrlsProcessorAgent extends BaseAgent {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(LoopingProcessorAgent.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LoopingUrlsProcessorAgent.class);
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private final BaseAgent extractorAgent;
     private final BaseAgent formatterAgent;
 
-    public LoopingProcessorAgent(BaseAgent extractorAgent, BaseAgent formatterAgent) {
+    public LoopingUrlsProcessorAgent(BaseAgent extractorAgent, BaseAgent formatterAgent) {
         super(
                 "looping_processor_agent",
                 "A deterministic agent that receives a list of URLs, loops through them, and calls an extractor and formatter for each.",

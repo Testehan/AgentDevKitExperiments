@@ -5,7 +5,7 @@ import com.google.adk.runner.InMemoryRunner;
 import com.google.adk.sessions.Session;
 import com.google.genai.types.Content;
 import com.google.genai.types.Part;
-import com.testehan.adk.agents.cm.agents.ListingAgent;
+import com.testehan.adk.agents.cm.agents.ListingAgents;
 import com.testehan.adk.agents.cm.config.ConfigLoader;
 import com.testehan.adk.agents.cm.tools.ListingUploader;
 import org.slf4j.Logger;
@@ -24,7 +24,7 @@ public class CMAgent {
     private static final Logger LOGGER = LoggerFactory.getLogger(CMAgent.class);
 
     // The run your agent with Dev UI, the ROOT_AGENT should be a global public static variable.
-    public static BaseAgent ROOT_AGENT = ListingAgent.createOrchestratorAgent();
+    public static BaseAgent ROOT_AGENT = ListingAgents.createOrchestratorAgent();
 
     public static void main(String[] args) throws Exception {
         // Create a single-threaded executor that can schedule commands.

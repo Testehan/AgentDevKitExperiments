@@ -32,6 +32,10 @@ public class ConfigLoader {
         return PROPERTIES.getProperty("api.endpoint.get.leads");
     }
 
+    public static String getApiEndpointGetPhones() {
+        return PROPERTIES.getProperty("api.endpoint.get.phones");
+    }
+
     public static String getApiEndpointPostListing() {
         return PROPERTIES.getProperty("api.endpoint.post.listing");
     }

@@ -65,7 +65,7 @@ public class LoopingUrlsProcessorAgent extends BaseAgent {
                 for (String url : urlsToProcess) {
                     LOGGER.info("LoopingProcessorAgent is now processing URL: {}", url);
 
-                    ctx.session().state().put("url_to_use",url);
+                    ctx.session().state().put(AGENT_VAR_LISTING_URL_INITIAL_SOURCE,url);
 
                     // --- RUN THE FIRST AGENT ---
                     LOGGER.info("--- 🚀 RUNNING SCRAPER AGENT ---");
@@ -82,7 +82,7 @@ public class LoopingUrlsProcessorAgent extends BaseAgent {
 
                     // --- RUN THE SECOND AGENT ---
                     // Pass the extractor's output as the input for the formatter agent
-                    ctx.session().state().put("scraped_text", scraperOutputString);
+                    ctx.session().state().put(AGENT_VAR_LISTING_SCRAPED_TEXT, scraperOutputString);
 
                     LOGGER.info("\n--- 🚀 RUNNING FORMATTER AGENT ---");
                     Event finalEvent = formatterAgent.runAsync(ctx).blockingLast();

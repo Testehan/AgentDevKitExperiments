@@ -1,4 +1,4 @@
-package com.testehan.adk.agents.cm.agents;
+package com.testehan.adk.agents.cm.agents.helpers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,7 +31,7 @@ public class LoopingUrlsProcessorAgent extends BaseAgent {
 
     public LoopingUrlsProcessorAgent(BaseAgent extractorAgent, BaseAgent formatterAgent) {
         super(
-                "looping_processor_agent",
+                "looping_urls_processor_agent",
                 "A deterministic agent that receives a list of URLs, loops through them, and calls an extractor and formatter for each.",
                 null,
                 null,
@@ -124,7 +124,7 @@ public class LoopingUrlsProcessorAgent extends BaseAgent {
                     }
                 }
 
-                LOGGER.info("LoopingProcessorAgent has finished. FinaL output created. \n");
+                LOGGER.info("LoopingProcessorAgent has finished. Final output created. \n");
                 // After the loop has finished successfully, signal completion of the stream.
                 emitter.onComplete();
 

@@ -6,6 +6,7 @@ import com.google.adk.sessions.Session;
 import com.google.genai.types.Content;
 import com.google.genai.types.Part;
 import com.testehan.adk.agents.cm.agents.ListingAgents;
+import com.testehan.adk.agents.cm.agents.WhatsAppAgents;
 import com.testehan.adk.agents.cm.config.ConfigLoader;
 import com.testehan.adk.agents.cm.tools.ListingUploader;
 import org.slf4j.Logger;
@@ -25,6 +26,7 @@ public class CMAgent {
 
     // The run your agent with Dev UI, the ROOT_AGENT should be a global public static variable.
     public static BaseAgent ROOT_AGENT = ListingAgents.createOrchestratorAgent();
+    public static BaseAgent ROOT_AGENT_WHATSAPP = WhatsAppAgents.createOrchestratorAgent();
 
     public static void main(String[] args) throws Exception {
         // Create a single-threaded executor that can schedule commands.
@@ -51,7 +53,7 @@ public class CMAgent {
         Runnable agent2Runner = () -> {
             try {
                 LOGGER.info("EXECUTING Leads flow: Starting the orchestrator agent run...");
-//                runWhatsAppAgent();   TODO continue with the whatsapp api..
+                runRootAgentWhatsApp();
 
                 LOGGER.info("SUCCESS Leads flow: Orchestrator agent run finished.");
 
@@ -104,6 +106,27 @@ public class CMAgent {
                     uploader.upload(individualJson,listingSourceUrl);
                 }
             });
+    }
+
+    private static void runRootAgentWhatsApp() {
+        // We now initialize the runner with our single ROOT_AGENT, the orchestrator.
+        InMemoryRunner runner = new InMemoryRunner(ROOT_AGENT_WHATSAPP);
+
+        Session session = runner.sessionService()
+                .createSession(ROOT_AGENT_WHATSAPP.name(), USER_ID)
+                .blockingGet();
+
+        Content apiUrl = Content.fromParts(Part.fromText(ConfigLoader.getApiEndpointGetPhones()));
+
+        runner.runAsync(USER_ID, session.id(), apiUrl)
+                .filter(event -> {
+                    // We only want to process events that have a non-null stateDelta
+                    // and contain our specific result key.
+                    return( event.actions() == null || event.actions().stateDelta() == null);
+                })
+                .blockingForEach(event -> {
+                    LOGGER.info("State Delta: {}", event.actions().stateDelta());
+                });
     }
 
 }

@@ -6,7 +6,8 @@ public class Constants {
     public static String USER_ID = "casamia";
 
 
-    public static final String MASTER_ORCHESTRATOR_AGENT_NAME = "master_orchestrator_agent";
+    public static final String MASTER_ORCHESTRATOR_LISTINGS_AGENT_NAME = "listings_master_orchestrator_agent";
+    public static final String MASTER_ORCHESTRATOR_PHONES_AGENT_NAME = "phones_master_orchestrator_agent";
     public static final String API_SCOUT_AGENT_NAME = "api_scout_agent";
     public static final String EXTRACTOR_AGENT_NAME = "extractor_agent";
     public static final String FORMATTER_AGENT = "formatter_agent";

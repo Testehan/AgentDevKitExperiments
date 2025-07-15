@@ -4,10 +4,11 @@ import com.google.adk.agents.BaseAgent;
 import com.google.adk.agents.LlmAgent;
 import com.google.adk.agents.SequentialAgent;
 import com.google.adk.tools.FunctionTool;
+import com.testehan.adk.agents.cm.agents.helpers.LoopingUrlsProcessorAgent;
 import com.testehan.adk.agents.cm.tools.Tools;
 
 import static com.testehan.adk.agents.cm.Schemas.PROPERTY_INFORMATION;
-import static com.testehan.adk.agents.cm.agents.CommonAgents.createApiScoutAgent;
+import static com.testehan.adk.agents.cm.agents.helpers.CommonAgents.createApiScoutAgent;
 import static com.testehan.adk.agents.cm.config.Constants.*;
 
 public class ListingAgents {
@@ -56,7 +57,7 @@ public class ListingAgents {
     // Agent 4 - The Master Orchestrator with Looping Logic. This is the new Root Agent.
     public static BaseAgent createOrchestratorAgent() {
         return SequentialAgent.builder()
-                .name(MASTER_ORCHESTRATOR_AGENT_NAME)
+                .name(MASTER_ORCHESTRATOR_LISTINGS_AGENT_NAME)
                 .description("Manages a data pipeline by fetching a list of URLs and then looping through them to call an extractor agent for each.")
                 .subAgents(apiScout, new LoopingUrlsProcessorAgent(extractor,formatter))
                 .build();

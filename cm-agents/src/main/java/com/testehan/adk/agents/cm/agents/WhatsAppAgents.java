@@ -21,6 +21,9 @@ public class WhatsAppAgents {
     // Agent 2 - The Conversation agent. Its only job is to determine if the user accepted to have its listing added
     private static BaseAgent conversationAgent = createConversationAgent();
 
+    // Agent 3 - The Next reply agent. Its only job is to determine the next reply to send
+    private static BaseAgent nextReplyAgent = createNextReplyAgent();
+
     private static BaseAgent createConversationAgent() {
         return LlmAgent.builder()
                 .name(CONVERSATION_AGENT)
@@ -31,7 +34,7 @@ public class WhatsAppAgents {
                                 "'{"+ AGENT_VAR_CURRENT_CONVERSATION +"}'." +
                                 "You must return one, and only one of the following possible values : " +
                         "1. \"yes\" - in case the user gave their consent" +
-                        "2. \"no\" - in case the user rejected the offer " +
+                        "2. \"no\" - in case the user rejected the offer or if the user is a real estate agency" +
                         "3. \"undecided\" - if the conversation is ongoing and a user decision was not yet made")
                 .outputKey(OUTPUT_CONVERSATION_AGENT) // Key for storing output in session state
                 .build();
@@ -41,12 +44,26 @@ public class WhatsAppAgents {
         return LlmAgent.builder()
                 .name(NEXT_REPLY_AGENT)
                 .model(USED_MODEL_NAME)
-                .description("This agent determines based on a conversation the next reply to send.")
-                .instruction("                        misiunea ta este sa afli daca userul doreste ca anuntul sau sa fie publicat si pe siteul casamia.ai. Uite istoricul conversatiei de pana acum \"Agent: Salut din CasaMia\n" +
-                                "User: Buna\n" +
-                                "User: :)\" returneaza \"userul e de acord\" daca si-a dat consimtamantul. returneaza \"userul nu e de acord\" daca nu doreste. altfel returneaza un mesaj care trimis userului ar putea duce conversatia spre scopul dorit de a publica anuntul. returneaza mesajul pe care doresti sa i'l trimiti in celelalte cazuri" +
-                        "'{"+ AGENT_VAR_LISTING_URL_INITIAL_SOURCE +"}'. " +
-                                "After you get the result from the tool, your job is done. Output the raw result from the tool directly.")
+                .description("This agent determines based on an existing conversation the next reply to send.")
+                // TODO add timestamps to conversation, and in this scenario where the user did not reply, only send extra messages if the last message was like 2 days ago or something
+                .instruction(
+                        "You are helping write the next WhatsApp message in an ongoing conversation. " +
+                        "The goal of the conversation is to first see if the user is a real estate agency and if not " +
+                        "ask the user's permission to add their real estate listing to the new CasaMia.ai platform.\n\n" +
+
+                        "CasaMia.ai Info:\n" +
+                        "- Adding listings is free.\n" +
+                        "- We're a new platform trying something different and offering this benefit to early users.\n\n" +
+
+                        "Guidelines:\n" +
+                        "- Be short, friendly, and sound like a real human.\n" +
+                        "- All replies must be in Romanian. Never reply in any other language.\n" +
+                        "- If the user asks whether they're speaking with an AI, answer \"no\".\n" +
+                        "- If the user asks a question you don't know the answer to, politely say so.\n" +
+                        "- If the last message was sent by you, respond with an empty string (\"\") to avoid spamming.\n" +
+                        "- The message should feel appropriate to send on WhatsApp — casual, natural, and human.\n\n" +
+
+                        "The history of the conversation until now is : '{"+ AGENT_VAR_CURRENT_CONVERSATION +"}'. ")
                 .outputKey(OUTPUT_NEXT_REPLY_AGENT) // Key for storing output in session state
                 .build();
     }
@@ -56,7 +73,7 @@ public class WhatsAppAgents {
         return SequentialAgent.builder()
                 .name(MASTER_ORCHESTRATOR_PHONES_AGENT_NAME)
                 .description("Manages a data pipeline by fetching a list of phone numbers and then looping through them")
-                .subAgents(apiScoutAgent, new LoopingPhonesProcessorAgent(conversationAgent))
+                .subAgents(apiScoutAgent, new LoopingPhonesProcessorAgent(conversationAgent, nextReplyAgent))
                 .build();
     }
 }

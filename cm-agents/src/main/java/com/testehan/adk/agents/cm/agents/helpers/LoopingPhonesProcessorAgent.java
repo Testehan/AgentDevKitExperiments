@@ -29,8 +29,9 @@ public class LoopingPhonesProcessorAgent extends BaseAgent {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final BaseAgent conversationAgent;
+    private final BaseAgent nextReplyAgent;
 
-    public LoopingPhonesProcessorAgent(BaseAgent conversationAgent) {
+    public LoopingPhonesProcessorAgent(BaseAgent conversationAgent, BaseAgent nextReplyAgent) {
         super(
                 "looping_phones_processor_agent",
                 "A deterministic agent that receives a list of phones, loops through them, checks if available on whatsapp.",
@@ -39,6 +40,7 @@ public class LoopingPhonesProcessorAgent extends BaseAgent {
                 null
         );
         this.conversationAgent = conversationAgent;
+        this.nextReplyAgent = nextReplyAgent;
     }
 
     @Override
@@ -115,65 +117,34 @@ public class LoopingPhonesProcessorAgent extends BaseAgent {
                         userConsent = rawOutput;
                         LOGGER.info("\n--- ✅ Conversation evaluation AGENT FINISHED. Raw output: ---\n {}", rawOutput);
 
+                    } else {
+                        // TODO send an initial message...
                     }
 
                     if (userConsent.equalsIgnoreCase("yes")){
-                        // set the lead on accepted.
+                        // TODO set the lead on accepted.
                     } else if (userConsent.equalsIgnoreCase("no")){
-                        // set the lead on NOT accepted
+                        // TODO set the lead on NOT accepted
                     } else if (userConsent.equalsIgnoreCase("undecided")){
-                        // call the next reply agent
+
+                        LOGGER.info("--- 🚀 RUNNING Next Reply AGENT ---");
+                        Event finalEvent = nextReplyAgent.runAsync(ctx).blockingLast();
+                        String rawOutput = "";
+                        if (finalEvent != null && NEXT_REPLY_AGENT.equals(finalEvent.author())) {
+                            // The content() method on the Event gives us the payload.
+                            // The text() method on Content concatenates all parts into a single string.
+                            rawOutput = finalEvent.content().get().text();
+                        }
+                        LOGGER.info("\n--- ✅ Conversation evaluation AGENT FINISHED. Raw output: ---\n {}", rawOutput);
+
+                        // send this to  reply out to the user..
+
                     } else {
                         LOGGER.warn("⚠️ The Conversation agent returned an unexpected value {}", userConsent);
                     }
 
                     // 2. see if they are available on WA ...TODO ..right now i can't do that with the unverified business account...
 
-//                    // --- RUN THE FIRST AGENT ---
-
-
-//                    LOGGER.info("\n--- ✅ SCRAPER FINISHED. Raw output: ---\n {}", scraperOutputString);
-//
-//                    // --- RUN THE SECOND AGENT ---
-//                    // Pass the extractor's output as the input for the formatter agent
-//                    ctx.session().state().put(AGENT_VAR_LISTING_SCRAPED_TEXT, scraperOutputString);
-//
-//                    LOGGER.info("\n--- 🚀 RUNNING FORMATTER AGENT ---");
-//                    Event finalEvent = formatterAgent.runAsync(ctx).blockingLast();
-//
-//                    String rawOutput = "";
-//                    // The final response from the agent is an Event. We can get the text directly from its content.
-//                    if (finalEvent != null && FORMATTER_AGENT.equals(finalEvent.author())) {
-//                        // The content() method on the Event gives us the payload.
-//                        // The text() method on Content concatenates all parts into a single string.
-//                        rawOutput = finalEvent.content().get().text();
-//                    }
-//
-//                    // **CRITICAL STEP**: Clean the LLM output to get pure JSON.
-//                    // This removes the "```json" at the start and the "```" at the end.
-//                    // The (?s) flag allows '.' to match newline characters.
-//                    String resultJson = rawOutput.replaceFirst("(?s)```json\\s*", "").replaceFirst("(?s)```\\s*$", "");
-//
-//
-//                    if (Objects.nonNull(resultJson) && !resultJson.trim().isEmpty()) {
-//                        LOGGER.info("Successfully extracted data for URL: {}", phone);
-//                        ConcurrentMap<String, Object> stateUpdate = new ConcurrentHashMap<>();
-//
-//                        stateUpdate.put(OUTPUT_MASTER_ORCHESTRATOR_LISTING, resultJson);
-//                        stateUpdate.put(OUTPUT_MASTER_ORCHESTRATOR_URL, phone);
-//
-//                        // Build the event carrying this single result.
-//                        Event resultEvent = Event.builder()
-//                                .author(this.name())
-//                                .actions(EventActions.builder().stateDelta(stateUpdate).build())
-//                                .build();
-//
-//                        // Emit the event to the Flowable stream.
-//                        emitter.onNext(resultEvent);
-//
-//                    } else {
-//                        LOGGER.warn("Extractor returned no valid result {} for URL: {}", resultJson, phone);
-//                    }
                 }
 
                 LOGGER.info("LoopingPhonesProcessorAgent has finished. Final output created. \n");

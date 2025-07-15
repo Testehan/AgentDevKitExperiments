@@ -11,15 +11,17 @@ import io.reactivex.rxjava3.core.Flowable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.testehan.adk.agents.cm.config.ConfigLoader.getApiEndpointGetPhones;
-import static com.testehan.adk.agents.cm.config.ConfigLoader.getAuthenticationHeaderValue;
+import static com.testehan.adk.agents.cm.config.ConfigLoader.*;
 import static com.testehan.adk.agents.cm.config.Constants.*;
 
 public class LoopingPhonesProcessorAgent extends BaseAgent {
@@ -113,13 +115,15 @@ public class LoopingPhonesProcessorAgent extends BaseAgent {
                         LOGGER.info("\n--- ✅ Conversation evaluation AGENT FINISHED. Raw output: ---\n {}", rawOutput);
 
                     } else {
-                        // TODO send an initial message...
+                        // send an initial message to this lead
+                        postLeadReply(client, phone, getRandomInitialMessage());
+                        updateLeadStatus(client, phone, "CONTACTED");
                     }
 
                     if (userConsent.equalsIgnoreCase("yes")){
-                        // TODO set the lead on accepted.
+                        updateLeadStatus(client, phone, "ACCEPTED");
                     } else if (userConsent.equalsIgnoreCase("no")){
-                        // TODO set the lead on NOT accepted
+                        updateLeadStatus(client, phone, "DECLINED");
                     } else if (userConsent.equalsIgnoreCase("undecided")){
 
                         LOGGER.info("--- 🚀 RUNNING Next Reply AGENT ---");
@@ -130,9 +134,10 @@ public class LoopingPhonesProcessorAgent extends BaseAgent {
                             // The text() method on Content concatenates all parts into a single string.
                             rawOutput = finalEvent.content().get().text();
                         }
-                        LOGGER.info("\n--- ✅ Conversation evaluation AGENT FINISHED. Raw output: ---\n {}", rawOutput);
+                        LOGGER.info("\n--- ✅ Next reply AGENT FINISHED. Raw output: ---\n {}", rawOutput);
 
-                        // send this to  reply out to the user..
+                        postLeadReply(client, phone, rawOutput);
+                        updateLeadStatus(client, phone, "CONTACTED");
 
                     } else {
                         LOGGER.warn("⚠️ The Conversation agent returned an unexpected value {}", userConsent);
@@ -153,6 +158,39 @@ public class LoopingPhonesProcessorAgent extends BaseAgent {
             }
         }, BackpressureStrategy.BUFFER);
     }
+
+    private static void updateLeadStatus(HttpClient client, String phone, String status) throws IOException, InterruptedException {
+        HttpRequest request;
+        String phoneEncoded = URLEncoder.encode(phone, StandardCharsets.UTF_8);
+        String statusEncoded = URLEncoder.encode(status, StandardCharsets.UTF_8);
+
+        request = HttpRequest.newBuilder()
+                .uri(URI.create(getApiEndpointPathLeadStatus() + "?phoneNumber=" + phoneEncoded + "&status=" + statusEncoded))
+                .method("PATCH", HttpRequest.BodyPublishers.noBody())
+                .header("Content-Type", "application/json")
+                .header("Authorization", getAuthenticationHeaderValue())
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        LOGGER.info("- Lead status updated -> Response code: {}  Response body: {}", response.statusCode(), response.body());
+    }
+
+    private static void postLeadReply(HttpClient client, String phoneNumber, String reply) throws IOException, InterruptedException {
+        HttpRequest request;
+        String phoneEncoded = URLEncoder.encode(phoneNumber, StandardCharsets.UTF_8);
+        String replyEncoded = URLEncoder.encode(reply, StandardCharsets.UTF_8);
+
+        request = HttpRequest.newBuilder()
+                .uri(URI.create(getApiEndpointPostLeadReply() + "?phoneNumber=" + phoneEncoded + "&reply=" + replyEncoded))
+                .method("POST", HttpRequest.BodyPublishers.noBody())
+                .header("Content-Type", "application/json")
+                .header("Authorization", getAuthenticationHeaderValue())
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        LOGGER.info("- Lead reply sent -> Response code: {}  Response body: {}", response.statusCode(), response.body());
+    }
+
 
     @Override
     protected Flowable<Event> runLiveImpl(InvocationContext invocationContext) {

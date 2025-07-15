@@ -21,8 +21,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.testehan.adk.agents.cm.config.ConfigLoader.getApiEndpointPassword;
-import static com.testehan.adk.agents.cm.config.ConfigLoader.getApiEndpointUsername;
+import static com.testehan.adk.agents.cm.config.ConfigLoader.*;
 import static com.testehan.adk.agents.cm.config.Constants.*;
 
 public class Tools {
@@ -69,16 +68,11 @@ public class Tools {
     public static Map<String, Object> getStringsFromApi(@Annotations.Schema(name = "apiEndpoint", description = "The endpoint for which the retrieval must be done") String apiEndpoint) {
         LOGGER.info("Tool called: Fetching data from API endpoint: {}", apiEndpoint);
 
-        // --- BASIC AUTHENTICATION LOGIC ---
-        String authString = getApiEndpointUsername() + ":" + getApiEndpointPassword();
-        String encodedAuthString = Base64.getEncoder().encodeToString(authString.getBytes());
-        String authHeaderValue = "Basic " + encodedAuthString;
-
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(apiEndpoint))
                 .header("Accept", "application/json") // Good practice to specify expected content type
-                .header("Authorization", authHeaderValue)
+                .header("Authorization", getAuthenticationHeaderValue())
                 .build();
         try {
             // Send the request and get the response

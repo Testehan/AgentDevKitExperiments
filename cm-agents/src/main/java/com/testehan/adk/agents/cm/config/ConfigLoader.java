@@ -2,6 +2,7 @@ package com.testehan.adk.agents.cm.config;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Base64;
 import java.util.Properties;
 
 public class ConfigLoader {
@@ -47,4 +48,13 @@ public class ConfigLoader {
     public static String getApiEndpointPassword() {
         return PROPERTIES.getProperty("api.endpoint.user.password");
     }
+
+
+    public static String getAuthenticationHeaderValue(){
+        String authString = getApiEndpointUsername() + ":" + getApiEndpointPassword();
+        String encodedAuthString = Base64.getEncoder().encodeToString(authString.getBytes());
+        String authHeaderValue = "Basic " + encodedAuthString;
+        return authHeaderValue;
+    }
+
 }

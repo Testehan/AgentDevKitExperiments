@@ -17,13 +17,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Base64;
 import java.util.List;
 
-import static com.testehan.adk.agents.cm.config.ConfigLoader.*;
+import static com.testehan.adk.agents.cm.config.ConfigLoader.getApiEndpointPostListing;
+import static com.testehan.adk.agents.cm.config.ConfigLoader.getAuthenticationHeaderValue;
 
 public class ListingUploader {
 
@@ -48,9 +47,7 @@ public class ListingUploader {
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.MULTIPART_FORM_DATA);
                 headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-                String authString = getApiEndpointUsername() + ":" + getApiEndpointPassword();
-                String encodedAuth = Base64.getEncoder().encodeToString(authString.getBytes(StandardCharsets.UTF_8));
-                headers.set("Authorization", "Basic " + encodedAuth);
+                headers.set("Authorization", "Basic " + getAuthenticationHeaderValue());
                 HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
                 // Make the POST request

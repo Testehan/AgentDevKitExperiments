@@ -16,10 +16,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 
-import static com.testehan.adk.agents.cm.config.ConfigLoader.*;
+import static com.testehan.adk.agents.cm.config.ConfigLoader.getApiEndpointGetPhones;
+import static com.testehan.adk.agents.cm.config.ConfigLoader.getAuthenticationHeaderValue;
 import static com.testehan.adk.agents.cm.config.Constants.*;
 
 public class LoopingPhonesProcessorAgent extends BaseAgent {
@@ -59,11 +59,6 @@ public class LoopingPhonesProcessorAgent extends BaseAgent {
                 }
                 LOGGER.info("LoopingPhonesProcessorAgent received {} phones to process.", phonesToProcess.size());
 
-                // --- BASIC AUTHENTICATION LOGIC ---
-                String authString = getApiEndpointUsername() + ":" + getApiEndpointPassword();
-                String encodedAuthString = Base64.getEncoder().encodeToString(authString.getBytes());
-                String authHeaderValue = "Basic " + encodedAuthString;
-
                 HttpClient client = HttpClient.newHttpClient();
 
                 // Step 2: Loop through the URLs
@@ -72,7 +67,7 @@ public class LoopingPhonesProcessorAgent extends BaseAgent {
 
                     HttpRequest request = HttpRequest.newBuilder()
                             .uri(URI.create(getApiEndpointGetPhones()+"/"+phone))
-                            .header("Authorization", authHeaderValue)
+                            .header("Authorization", getAuthenticationHeaderValue())
                             .build();
 
                     String conversation = "";

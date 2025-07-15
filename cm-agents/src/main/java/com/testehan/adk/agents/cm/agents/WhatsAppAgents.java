@@ -45,7 +45,6 @@ public class WhatsAppAgents {
                 .name(NEXT_REPLY_AGENT)
                 .model(USED_MODEL_NAME)
                 .description("This agent determines based on an existing conversation the next reply to send.")
-                // TODO add timestamps to conversation, and in this scenario where the user did not reply, only send extra messages if the last message was like 2 days ago or something
                 .instruction(
                         "You are helping write the next WhatsApp message in an ongoing conversation. " +
                         "The goal of the conversation is to first see if the user is a real estate agency and if not " +
@@ -60,7 +59,9 @@ public class WhatsAppAgents {
                         "- All replies must be in Romanian. Never reply in any other language.\n" +
                         "- If the user asks whether they're speaking with an AI, answer \"no\".\n" +
                         "- If the user asks a question you don't know the answer to, politely say so.\n" +
-                        "- If the last message was sent by you, respond with an empty string (\"\") to avoid spamming.\n" +
+ //                       "- If the last message was sent by you, respond with an empty string (\"\") to avoid spamming.\n" +
+                        "- If the last message was sent by you more than 2 days ago and the user hasn’t replied, provide a followup message." +
+                                "Only provide this followup once. Meaning we do not want to spam the user every 2 days.\n" +
                         "- The message should feel appropriate to send on WhatsApp — casual, natural, and human.\n\n" +
 
                         "The history of the conversation until now is : '{"+ AGENT_VAR_CURRENT_CONVERSATION +"}'. ")

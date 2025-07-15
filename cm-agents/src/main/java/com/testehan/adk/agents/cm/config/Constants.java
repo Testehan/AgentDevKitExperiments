@@ -1,5 +1,9 @@
 package com.testehan.adk.agents.cm.config;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
 public class Constants {
     public static final String USED_MODEL_NAME = "gemini-2.5-pro";
 
@@ -27,5 +31,18 @@ public class Constants {
     public static final String TOOL_GET_STRINGS = "getStringsFromApi";
     public static final String TOOL_EXTRACT = "extractPageContentAndImages";
 
+
+    private static final List<String> INITIAL_LEAD_MESSAGES = new ArrayList<>(List.of(
+            "Putem adăuga gratuit anunțul tău pe platforma noastră  pentru mai multă vizibilitate?",
+            "Am văzut anunțul tău. Putem să-l adăugăm gratuit pe www.casamia.ai pentru mai multă vizibilitate?",
+            "Îți scriem legat de anunțul tău. Putem să-l adăugăm gratuit pe casamia.ai pentru mai multă vizibilitate. Te interesează?",
+            "Am văzut anunțul tău. Îl putem publica gratuit pe www.casamia.ai pentru mai multă vizibilitate. Te interesează?",
+            "Am văzut anunțul tău și ne-a plăcut. Putem să-l adăugăm gratuit pe casamia.ai pentru expunere în plus?",
+            "Îți scriem legat de apartament. Putem să-l adăugăm gratuit pe casamia.ai, fără obligații. Ce părere ai?"
+    ));
+
+    public static String getRandomInitialMessage(){
+        return INITIAL_LEAD_MESSAGES.get(new Random().nextInt(INITIAL_LEAD_MESSAGES.size()));
+    }
 
 }

@@ -2,8 +2,7 @@ package com.testehan.adk.agents.cm.config;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Base64;
-import java.util.Properties;
+import java.util.*;
 
 public class ConfigLoader {
 
@@ -35,6 +34,14 @@ public class ConfigLoader {
 
     public static String getApiEndpointGetPhones() {
         return PROPERTIES.getProperty("api.endpoint.get.phones");
+    }
+
+    public static String getApiEndpointPathLeadStatus() {
+        return PROPERTIES.getProperty("api.endpoint.patch.lead.status");
+    }
+
+    public static String getApiEndpointPostLeadReply() {
+        return PROPERTIES.getProperty("api.endpoint.post.lead.reply");
     }
 
     public static String getApiEndpointPostListing() {

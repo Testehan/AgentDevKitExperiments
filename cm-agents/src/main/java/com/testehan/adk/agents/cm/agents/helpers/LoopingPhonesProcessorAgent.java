@@ -5,15 +5,22 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.adk.agents.BaseAgent;
 import com.google.adk.agents.InvocationContext;
 import com.google.adk.events.Event;
+import com.google.common.base.Strings;
 import io.reactivex.rxjava3.core.BackpressureStrategy;
 import io.reactivex.rxjava3.core.Flowable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
-import static com.testehan.adk.agents.cm.config.Constants.OUTPUT_SCOUT_AGENT;
+import static com.testehan.adk.agents.cm.config.ConfigLoader.*;
+import static com.testehan.adk.agents.cm.config.Constants.*;
 
 public class LoopingPhonesProcessorAgent extends BaseAgent {
 
@@ -21,7 +28,9 @@ public class LoopingPhonesProcessorAgent extends BaseAgent {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    public LoopingPhonesProcessorAgent() {
+    private final BaseAgent conversationAgent;
+
+    public LoopingPhonesProcessorAgent(BaseAgent conversationAgent) {
         super(
                 "looping_phones_processor_agent",
                 "A deterministic agent that receives a list of phones, loops through them, checks if available on whatsapp.",
@@ -29,12 +38,14 @@ public class LoopingPhonesProcessorAgent extends BaseAgent {
                 null,
                 null
         );
+        this.conversationAgent = conversationAgent;
     }
 
     @Override
     protected Flowable<Event> runAsyncImpl(InvocationContext ctx) {
         // Step 1: Get the input from the previous agent
-        String jsonPhones = (String) ctx.session().state().get(OUTPUT_SCOUT_AGENT);
+        String jsonPhonesRaw = (String) ctx.session().state().get(OUTPUT_SCOUT_AGENT);
+        String jsonPhones = jsonPhonesRaw.replaceFirst("(?s)```json\\s*", "").replaceFirst("(?s)```\\s*$", "");
 
         return Flowable.create(emitter -> {
             try {
@@ -46,23 +57,81 @@ public class LoopingPhonesProcessorAgent extends BaseAgent {
                 }
                 LOGGER.info("LoopingPhonesProcessorAgent received {} phones to process.", phonesToProcess.size());
 
+                // --- BASIC AUTHENTICATION LOGIC ---
+                String authString = getApiEndpointUsername() + ":" + getApiEndpointPassword();
+                String encodedAuthString = Base64.getEncoder().encodeToString(authString.getBytes());
+                String authHeaderValue = "Basic " + encodedAuthString;
+
+                HttpClient client = HttpClient.newHttpClient();
+
                 // Step 2: Loop through the URLs
                 for (String phone : phonesToProcess) {
                     LOGGER.info("LoopingProcessorAgent is now processing URL: {}", phone);
 
-//                    ctx.session().state().put(AGENT_VAR_LISTING_URL_INITIAL_SOURCE,phone);
+                    HttpRequest request = HttpRequest.newBuilder()
+                            .uri(URI.create(getApiEndpointGetPhones()+"/"+phone))
+                            .header("Authorization", authHeaderValue)
+                            .build();
+
+                    String conversation = "";
+                    try {
+                        // Send the request and get the response
+                        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+                        if (response.statusCode() == 401) { // Unauthorized
+//                            return Map.of("status", "error", "message", "API call failed. The provided credentials were an incorrect (Unauthorized).");
+                        }
+                        if (response.statusCode() != 200) {
+//                            return Map.of("status", "error", "message", "API call failed with status code: " + response.statusCode());
+                        }
+
+                        conversation = response.body();
+                        LOGGER.info("Successfully fetched  conversation {} ", conversation);
+//                        return Map.of("status", "success", OUTPUT_SCOUT_AGENT, strings);
+
+                    } catch (Exception e) {
+                        LOGGER.error("An error occurred while calling the API", e);
+                        // TODO think what should happen in this case...i think that no new message should be sent to users in this case.
+                        // obviously in this scenario the conversation is "" but we don't want the agent to think that he should see
+                        // this as an empty conversation, and start with the initial conversations...rather an empty string..
 //
+                    }
+
+                    ctx.session().state().put(AGENT_VAR_CURRENT_CONVERSATION, conversation);
+
+                    String userConsent = "";
+                    if (!Strings.isNullOrEmpty(conversation)){
+
+                        LOGGER.info("--- 🚀 RUNNING Conversation evaluation AGENT ---");
+                        Event finalEvent = conversationAgent.runAsync(ctx).blockingLast();
+                        String rawOutput = "";
+                        // The final response from the agent is an Event. We can get the text directly from its content.
+                        if (finalEvent != null && CONVERSATION_AGENT.equals(finalEvent.author())) {
+                            // The content() method on the Event gives us the payload.
+                            // The text() method on Content concatenates all parts into a single string.
+                            rawOutput = finalEvent.content().get().text();
+                        }
+
+                        userConsent = rawOutput;
+                        LOGGER.info("\n--- ✅ Conversation evaluation AGENT FINISHED. Raw output: ---\n {}", rawOutput);
+
+                    }
+
+                    if (userConsent.equalsIgnoreCase("yes")){
+                        // set the lead on accepted.
+                    } else if (userConsent.equalsIgnoreCase("no")){
+                        // set the lead on NOT accepted
+                    } else if (userConsent.equalsIgnoreCase("undecided")){
+                        // call the next reply agent
+                    } else {
+                        LOGGER.warn("⚠️ The Conversation agent returned an unexpected value {}", userConsent);
+                    }
+
+                    // 2. see if they are available on WA ...TODO ..right now i can't do that with the unverified business account...
+
 //                    // --- RUN THE FIRST AGENT ---
-//                    LOGGER.info("--- 🚀 RUNNING SCRAPER AGENT ---");
-//                    // i abandoned investigathing why the line from below gets stuck in a loop...so i just call the tool directly
-//                    // to get the content of the page.
-//                    //            extractorAgent.runAsync(ctx).blockingForEach(event -> System.out.println("SCRAPER EVENT: " + event.toJson()));
-//                    HumanizedBrowsing humanizedBrowsing = new HumanizedBrowsing();
-//                    Map<String, Object> scraperOutput =  humanizedBrowsing.browseUrl(phone);
-//
-//                    // The result of the first agent is now in the context under "scraper_output"
-//                    String scraperOutputString = "Page Text: " + scraperOutput.get("pageText") + "\n\n" +
-//                            "Image URLs: " + scraperOutput.get("imageUrls");
+
+
 //                    LOGGER.info("\n--- ✅ SCRAPER FINISHED. Raw output: ---\n {}", scraperOutputString);
 //
 //                    // --- RUN THE SECOND AGENT ---
@@ -71,8 +140,6 @@ public class LoopingPhonesProcessorAgent extends BaseAgent {
 //
 //                    LOGGER.info("\n--- 🚀 RUNNING FORMATTER AGENT ---");
 //                    Event finalEvent = formatterAgent.runAsync(ctx).blockingLast();
-//
-//                    LOGGER.info("FORMATTER FINAL EVENT: \n {}", finalEvent.toJson());
 //
 //                    String rawOutput = "";
 //                    // The final response from the agent is an Event. We can get the text directly from its content.

@@ -128,11 +128,11 @@ public class LoopingUrlsProcessorAgent extends BaseAgent {
                 // After the loop has finished successfully, signal completion of the stream.
                 emitter.onComplete();
 
-        } catch (Exception e) {
-            LOGGER.error("An error occurred during the execution of the agent.", e);
-            // If any exception occurs, propagate it through the stream.
-            emitter.onError(e);
-        }
+            } catch (Exception e) {
+                LOGGER.error("An error occurred during the execution of the agent.", e);
+                // If any exception occurs, propagate it through the stream.
+                emitter.onError(e);
+            }
         }, BackpressureStrategy.BUFFER);
     }
 

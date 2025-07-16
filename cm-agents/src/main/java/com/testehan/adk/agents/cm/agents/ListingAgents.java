@@ -50,6 +50,8 @@ public class ListingAgents {
                         "--- SCHEMA END --- \n\n" +
 
                         "Based *only* on the provided content and the schema definition, generate the final JSON string." +
+                        "Very important : the city field must contain the name of a valid city from Romania. If the value is Cluj then that is not" +
+                        "a valid city name. Replace it with Cluj-Napoca." +
                         "Your final answer MUST be ONLY the raw JSON string. Do not wrap it in markdown or add any other text. Your entire output must start with `{` and end with `}`.")
                 .build();
     }

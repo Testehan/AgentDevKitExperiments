@@ -47,7 +47,7 @@ public class ListingUploader {
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.MULTIPART_FORM_DATA);
                 headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-                headers.set("Authorization", "Basic " + getAuthenticationHeaderValue());
+                headers.set("Authorization", getAuthenticationHeaderValue());
                 HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
                 // Make the POST request

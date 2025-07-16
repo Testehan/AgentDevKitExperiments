@@ -84,7 +84,7 @@ public class ListingUploader {
         body.add("noOfRooms", Integer.valueOf(listing.noOfRooms));
         body.add("floor", listing.floor);
         body.add("ownerName", listing.ownerName);
-        body.add("active", false);
+        body.add("active", true);
         body.add("availableFrom", getAvailableFromToday());
 
         if (listing.imageUrls != null) {

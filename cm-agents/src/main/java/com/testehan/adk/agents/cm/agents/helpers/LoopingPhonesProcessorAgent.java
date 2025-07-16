@@ -63,12 +63,14 @@ public class LoopingPhonesProcessorAgent extends BaseAgent {
 
                 HttpClient client = HttpClient.newHttpClient();
 
-                // Step 2: Loop through the URLs
+                // Step 2: Loop through the phone numbers
                 for (String phone : phonesToProcess) {
-                    LOGGER.info("LoopingProcessorAgent is now processing URL: {}", phone);
+                    LOGGER.info("LoopingPhonesProcessorAgent is now processing phone: {}", phone);
+
+                    String phoneEncoded = URLEncoder.encode(phone, StandardCharsets.UTF_8);
 
                     HttpRequest request = HttpRequest.newBuilder()
-                            .uri(URI.create(getApiEndpointGetPhones()+"/"+phone))
+                            .uri(URI.create(getApiEndpointGetPhones() + "/" + phoneEncoded))
                             .header("Authorization", getAuthenticationHeaderValue())
                             .build();
 
@@ -116,14 +118,16 @@ public class LoopingPhonesProcessorAgent extends BaseAgent {
 
                     } else {
                         // send an initial message to this lead
-                        postLeadReply(client, phone, getRandomInitialMessage());
+                        postLeadReply(client, phone, getRandomInitialMessage(), true);
                         updateLeadStatus(client, phone, "CONTACTED");
                     }
 
-                    if (userConsent.equalsIgnoreCase("yes")){
-                        updateLeadStatus(client, phone, "ACCEPTED");
-                    } else if (userConsent.equalsIgnoreCase("no")){
-                        updateLeadStatus(client, phone, "DECLINED");
+                    if (userConsent.equalsIgnoreCase("ACCEPTED") ||
+                        userConsent.equalsIgnoreCase("DECLINED") ||
+                        userConsent.equalsIgnoreCase("ALREADY_RENTED") ||
+                        userConsent.equalsIgnoreCase("REAL_ESTATE_COMPANY"))
+                    {
+                        updateLeadStatus(client, phone, userConsent);
                     } else if (userConsent.equalsIgnoreCase("undecided")){
 
                         LOGGER.info("--- 🚀 RUNNING Next Reply AGENT ---");
@@ -136,7 +140,7 @@ public class LoopingPhonesProcessorAgent extends BaseAgent {
                         }
                         LOGGER.info("\n--- ✅ Next reply AGENT FINISHED. Raw output: ---\n {}", rawOutput);
 
-                        postLeadReply(client, phone, rawOutput);
+                        postLeadReply(client, phone, rawOutput, false);
                         updateLeadStatus(client, phone, "CONTACTED");
 
                     } else {
@@ -175,13 +179,13 @@ public class LoopingPhonesProcessorAgent extends BaseAgent {
         LOGGER.info("- Lead status updated -> Response code: {}  Response body: {}", response.statusCode(), response.body());
     }
 
-    private static void postLeadReply(HttpClient client, String phoneNumber, String reply) throws IOException, InterruptedException {
+    private static void postLeadReply(HttpClient client, String phoneNumber, String reply, Boolean isFirstMessage) throws IOException, InterruptedException {
         HttpRequest request;
         String phoneEncoded = URLEncoder.encode(phoneNumber, StandardCharsets.UTF_8);
         String replyEncoded = URLEncoder.encode(reply, StandardCharsets.UTF_8);
 
         request = HttpRequest.newBuilder()
-                .uri(URI.create(getApiEndpointPostLeadReply() + "?phoneNumber=" + phoneEncoded + "&reply=" + replyEncoded))
+                .uri(URI.create(getApiEndpointPostLeadReply() + "?phoneNumber=" + phoneEncoded + "&reply=" + replyEncoded + "&isFirstMessage=" + isFirstMessage))
                 .method("POST", HttpRequest.BodyPublishers.noBody())
                 .header("Content-Type", "application/json")
                 .header("Authorization", getAuthenticationHeaderValue())

@@ -33,12 +33,12 @@ public class Constants {
 
 
     private static final List<String> INITIAL_LEAD_MESSAGES = new ArrayList<>(List.of(
-            "Anunțul tău este încă disponibil?",
-            "Am văzut anunțul tău. Mai este disponibil?",
-            "Îți scriem legat de anunțul tău. Mai este disponibil? ",
-            "Am văzut anunțul tău. Îl putem publica gratuit pe www.casamia.ai pentru mai multă vizibilitate. Te interesează?",
-            "Am văzut anunțul tău și ne-a plăcut. Mai este valabil?",
-            "Îți scriem legat de apartament. Mai este disponibil?"
+            "Salut! Anunțul tău este încă disponibil?",
+            "Bună ziua! Am văzut anunțul tău. Mai este disponibil?",
+            "Bună! Îți scriem legat de anunțul tău. Mai este disponibil? ",
+            "Salut! Am văzut anunțul tău. Mai este disponibil?",
+            "Salut! Am văzut anunțul tău și ne-a plăcut. Mai este valabil?",
+            "Salut! Îți scriem legat de proprietate. Mai este disponibilă pentru inchiriat?"
     ));
 
     public static String getRandomInitialMessage(){

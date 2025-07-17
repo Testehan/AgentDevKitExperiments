@@ -29,20 +29,21 @@ public class Constants {
     public static final String OUTPUT_NEXT_REPLY_AGENT = "next_reply_output";
 
     public static final String TOOL_GET_STRINGS = "getStringsFromApi";
+    public static final String TOOL_GET_MAPS= "getMapsFromApi";
     public static final String TOOL_EXTRACT = "extractPageContentAndImages";
 
 
     private static final List<String> INITIAL_LEAD_MESSAGES = new ArrayList<>(List.of(
-            "Salut! Anunțul tău este încă disponibil?",
-            "Bună ziua! Am văzut anunțul tău. Mai este disponibil?",
-            "Bună! Îți scriem legat de anunțul tău. Mai este disponibil? ",
-            "Salut! Am văzut anunțul tău. Mai este disponibil?",
-            "Salut! Am văzut anunțul tău și ne-a plăcut. Mai este valabil?",
-            "Salut! Îți scriem legat de proprietate. Mai este disponibilă pentru inchiriat?"
+            "Salut! Anunțul tău este încă disponibil? %s",
+            "Bună ziua! Am văzut anunțul tău %s . Mai este disponibil?",
+            "Bună! Îți scriem legat de anunțul tău %s . Mai este disponibil? ",
+            "Salut! Am văzut anunțul tău %s. Mai este disponibil?",
+            "Salut! Am văzut anunțul tău și ne-a plăcut %s. Mai este valabil?",
+            "Salut! Îți scriem legat de proprietate %s. Mai este disponibilă pentru inchiriat?"
     ));
 
-    public static String getRandomInitialMessage(){
-        return INITIAL_LEAD_MESSAGES.get(new Random().nextInt(INITIAL_LEAD_MESSAGES.size()));
+    public static String getRandomInitialMessage(String url){
+        return String.format(INITIAL_LEAD_MESSAGES.get(new Random().nextInt(INITIAL_LEAD_MESSAGES.size())),url);
     }
 
 }

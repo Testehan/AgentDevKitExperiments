@@ -5,7 +5,7 @@ import com.google.adk.agents.LlmAgent;
 import com.google.adk.agents.SequentialAgent;
 import com.testehan.adk.agents.cm.agents.helpers.LoopingPhonesProcessorAgent;
 
-import static com.testehan.adk.agents.cm.agents.helpers.CommonAgents.createApiScoutAgent;
+import static com.testehan.adk.agents.cm.agents.helpers.CommonAgents.createApiScoutPhoneUrlsAgent;
 import static com.testehan.adk.agents.cm.config.Constants.*;
 
 public class WhatsAppAgents {
@@ -16,7 +16,7 @@ public class WhatsAppAgents {
     // 4. determine via llm what message to send next
 
     // Agent 1 - The API Scout. Its only job is to call the API.
-    private static BaseAgent apiScoutAgent = createApiScoutAgent();
+    private static BaseAgent apiScoutAgent = createApiScoutPhoneUrlsAgent();
 
     // Agent 2 - The Conversation agent. Its only job is to determine if the user accepted to have its listing added
     private static BaseAgent conversationAgent = createConversationAgent();

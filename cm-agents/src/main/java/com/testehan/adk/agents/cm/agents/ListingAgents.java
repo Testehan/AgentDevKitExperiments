@@ -8,13 +8,13 @@ import com.testehan.adk.agents.cm.agents.helpers.LoopingUrlsProcessorAgent;
 import com.testehan.adk.agents.cm.tools.Tools;
 
 import static com.testehan.adk.agents.cm.Schemas.PROPERTY_INFORMATION;
-import static com.testehan.adk.agents.cm.agents.helpers.CommonAgents.createApiScoutAgent;
+import static com.testehan.adk.agents.cm.agents.helpers.CommonAgents.createApiScoutURLsAgent;
 import static com.testehan.adk.agents.cm.config.Constants.*;
 
 public class ListingAgents {
 
     // Agent 1 - The API Scout. Its only job is to call the API.
-    private static BaseAgent apiScout = createApiScoutAgent();
+    private static BaseAgent apiScout = createApiScoutURLsAgent();
 
     // Agent 2 - The Extractor Agent. Its only job is to extract data and make sure it is valid.
     private static BaseAgent extractor = createExtractorAgent();

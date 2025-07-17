@@ -76,8 +76,7 @@ public class LoopingUrlsProcessorAgent extends BaseAgent {
                     Map<String, Object> scraperOutput =  humanizedBrowsing.browseUrl(url);
 
                     // The result of the first agent is now in the context under "scraper_output"
-                    String scraperOutputString = "Page Text: " + scraperOutput.get("pageText") + "\n\n" +
-                                                  "Image URLs: " + scraperOutput.get("imageUrls");
+                    String scraperOutputString = scraperOutput.get("extractedData").toString();
                     LOGGER.info("\n--- ✅ SCRAPER FINISHED. Raw output: ---\n {}", scraperOutputString);
 
                     // --- RUN THE SECOND AGENT ---

@@ -80,7 +80,7 @@ public class ListingUploader {
         body.add("shortDescription", listing.shortDescription);
         body.add("price", Integer.valueOf(listing.price));
         body.add("propertyType", "rent");
-        body.add("surface", Integer.valueOf(listing.surface));
+        body.add("surface", listing.surface != null ? Integer.valueOf(listing.surface) : 0);
         body.add("noOfRooms", Integer.valueOf(listing.noOfRooms));
         body.add("floor", listing.floor);
         body.add("ownerName", listing.ownerName);

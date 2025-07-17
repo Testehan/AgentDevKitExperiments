@@ -1,6 +1,7 @@
 package com.testehan.adk.agents.cm.agents.helpers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.adk.agents.BaseAgent;
 import com.google.adk.agents.InvocationContext;
@@ -20,6 +21,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static com.testehan.adk.agents.cm.config.ConfigLoader.*;
 import static com.testehan.adk.agents.cm.config.Constants.*;
@@ -53,18 +55,20 @@ public class LoopingPhonesProcessorAgent extends BaseAgent {
 
         return Flowable.create(emitter -> {
             try {
-                List<String> phonesToProcess = new ArrayList<>();
+                List<Map<String, String>> pairs = new ArrayList<>();
                 try {
-                    phonesToProcess = OBJECT_MAPPER.readValue(jsonPhones, List.class);
+                    pairs = OBJECT_MAPPER.readValue(jsonPhones, new TypeReference<>() {});
                 } catch (JsonProcessingException e) {
                     LOGGER.error("LoopingPhonesProcessorAgent received invalid json array of phones to process. {}", jsonPhones);
                 }
-                LOGGER.info("LoopingPhonesProcessorAgent received {} phones to process.", phonesToProcess.size());
+                LOGGER.info("LoopingPhonesProcessorAgent received {} phones to process.", pairs.size());
 
                 HttpClient client = HttpClient.newHttpClient();
 
                 // Step 2: Loop through the phone numbers
-                for (String phone : phonesToProcess) {
+                for (Map<String, String> pair : pairs) {
+                    String phone = pair.get("phoneNumber");
+                    String url = pair.get("url");
                     LOGGER.info("LoopingPhonesProcessorAgent is now processing phone: {}", phone);
 
                     String phoneEncoded = URLEncoder.encode(phone, StandardCharsets.UTF_8);
@@ -118,7 +122,7 @@ public class LoopingPhonesProcessorAgent extends BaseAgent {
 
                     } else {
                         // send an initial message to this lead
-                        postLeadReply(client, phone, getRandomInitialMessage(), true);
+                        postLeadReply(client, phone, getRandomInitialMessage(url), true);
                         updateLeadStatus(client, phone, "CONTACTED");
                     }
 

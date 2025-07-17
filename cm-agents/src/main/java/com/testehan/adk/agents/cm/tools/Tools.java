@@ -15,13 +15,12 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.testehan.adk.agents.cm.config.ConfigLoader.*;
+import static com.testehan.adk.agents.cm.config.ConfigLoader.getAuthenticationHeaderValue;
 import static com.testehan.adk.agents.cm.config.Constants.*;
 
 public class Tools {
@@ -91,6 +90,48 @@ public class Tools {
 
             LOGGER.info("Successfully fetched {} strings from the API.", strings.size());
             return Map.of("status", "success", OUTPUT_SCOUT_AGENT, strings);
+
+        } catch (Exception e) {
+            LOGGER.error("An error occurred while calling the API", e);
+            return Map.of("status", "error", "message", "An unexpected error occurred: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Calls a given API endpoint to fetch a JSON array of Map<String, String> representing phoneNumber key to url value.
+     * @param apiEndpoint The full URL of the API to call.
+     * @return A map containing the status and a list of Map<String, String> found.
+     */
+    @Annotations.Schema(
+            name = TOOL_GET_MAPS,
+            description = "Navigates to an API to get the list of Map<String, String> that must be processed."
+    )
+    public static Map<String, Object> getMapsFromApi(@Annotations.Schema(name = "apiEndpoint", description = "The endpoint for which the retrieval must be done") String apiEndpoint) {
+        LOGGER.info("Tool called: Fetching data from API endpoint: {}", apiEndpoint);
+
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(apiEndpoint))
+                .header("Accept", "application/json") // Good practice to specify expected content type
+                .header("Authorization", getAuthenticationHeaderValue())
+                .build();
+        try {
+            // Send the request and get the response
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 401) { // Unauthorized
+                return Map.of("status", "error", "message", "API call failed. The provided credentials were an incorrect (Unauthorized).");
+            }
+            if (response.statusCode() != 200) {
+                return Map.of("status", "error", "message", "API call failed with status code: " + response.statusCode());
+            }
+
+            String responseBody = response.body();
+            // Parse the JSON array of strings into a Java List<String>
+            List<Map<String,String>> pairs = OBJECT_MAPPER.readValue(responseBody, new TypeReference<>() {});
+
+            LOGGER.info("Successfully fetched {} strings from the API.", pairs.size());
+            return Map.of("status", "success", OUTPUT_SCOUT_AGENT, pairs);
 
         } catch (Exception e) {
             LOGGER.error("An error occurred while calling the API", e);

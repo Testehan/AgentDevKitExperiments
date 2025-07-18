@@ -26,16 +26,16 @@ import java.util.Map;
 import static com.testehan.adk.agents.cm.config.ConfigLoader.*;
 import static com.testehan.adk.agents.cm.config.Constants.*;
 
-public class LoopingPhonesProcessorAgent extends BaseAgent {
+public class InitialContactLoopingPhonesProcessorAgent extends BaseAgent {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(LoopingPhonesProcessorAgent.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(InitialContactLoopingPhonesProcessorAgent.class);
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final BaseAgent conversationAgent;
     private final BaseAgent nextReplyAgent;
 
-    public LoopingPhonesProcessorAgent(BaseAgent conversationAgent, BaseAgent nextReplyAgent) {
+    public InitialContactLoopingPhonesProcessorAgent(BaseAgent conversationAgent, BaseAgent nextReplyAgent) {
         super(
                 "looping_phones_processor_agent",
                 "A deterministic agent that receives a list of phones, loops through them, checks if available on whatsapp.",
@@ -59,9 +59,9 @@ public class LoopingPhonesProcessorAgent extends BaseAgent {
                 try {
                     pairs = OBJECT_MAPPER.readValue(jsonPhones, new TypeReference<>() {});
                 } catch (JsonProcessingException e) {
-                    LOGGER.error("LoopingPhonesProcessorAgent received invalid json array of phones to process. {}", jsonPhones);
+                    LOGGER.error("InitialContactLoopingPhonesProcessorAgent received invalid json array of phones to process. {}", jsonPhones);
                 }
-                LOGGER.info("LoopingPhonesProcessorAgent received {} phones to process.", pairs.size());
+                LOGGER.info("InitialContactLoopingPhonesProcessorAgent received {} phones to process.", pairs.size());
 
                 HttpClient client = HttpClient.newHttpClient();
 
@@ -69,7 +69,7 @@ public class LoopingPhonesProcessorAgent extends BaseAgent {
                 for (Map<String, String> pair : pairs) {
                     String phone = pair.get("phoneNumber");
                     String url = pair.get("url");
-                    LOGGER.info("LoopingPhonesProcessorAgent is now processing phone: {}", phone);
+                    LOGGER.info("InitialContactLoopingPhonesProcessorAgent is now processing phone: {}", phone);
 
                     String phoneEncoded = URLEncoder.encode(phone, StandardCharsets.UTF_8);
 
@@ -155,7 +155,7 @@ public class LoopingPhonesProcessorAgent extends BaseAgent {
 
                 }
 
-                LOGGER.info("LoopingPhonesProcessorAgent has finished. Final output created. \n");
+                LOGGER.info("InitialContactLoopingPhonesProcessorAgent has finished. Final output created. \n");
                 // After the loop has finished successfully, signal completion of the stream.
                 emitter.onComplete();
 
@@ -173,7 +173,7 @@ public class LoopingPhonesProcessorAgent extends BaseAgent {
         String statusEncoded = URLEncoder.encode(status, StandardCharsets.UTF_8);
 
         request = HttpRequest.newBuilder()
-                .uri(URI.create(getApiEndpointPathLeadStatus() + "?phoneNumber=" + phoneEncoded + "&status=" + statusEncoded))
+                .uri(URI.create(getApiEndpointPatchLeadStatus() + "?phoneNumber=" + phoneEncoded + "&status=" + statusEncoded))
                 .method("PATCH", HttpRequest.BodyPublishers.noBody())
                 .header("Content-Type", "application/json")
                 .header("Authorization", getAuthenticationHeaderValue())

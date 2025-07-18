@@ -3,13 +3,13 @@ package com.testehan.adk.agents.cm.agents;
 import com.google.adk.agents.BaseAgent;
 import com.google.adk.agents.LlmAgent;
 import com.google.adk.agents.SequentialAgent;
-import com.testehan.adk.agents.cm.agents.helpers.LoopingPhonesProcessorAgent;
+import com.testehan.adk.agents.cm.agents.helpers.InitialContactLoopingPhonesProcessorAgent;
 
 import static com.testehan.adk.agents.cm.agents.helpers.CommonAgents.createApiScoutPhoneUrlsAgent;
 import static com.testehan.adk.agents.cm.config.Constants.*;
 
-public class WhatsAppAgents {
-// Steps
+public class WhatsAppInitialContactAgents {
+// Steps Flow Initial Contact
     // 1. get not contacted numbers
     // 2. see if they are available on WA - TODO I can't do this right now ..only after obtaining higher WA priviledges with a real, not trial, account
     // 3. check if their is a history of conversation or if this is a new one
@@ -19,12 +19,12 @@ public class WhatsAppAgents {
     private static BaseAgent apiScoutAgent = createApiScoutPhoneUrlsAgent();
 
     // Agent 2 - The Conversation agent. Its only job is to determine if the user accepted to have its listing added
-    private static BaseAgent conversationAgent = createConversationAgent();
+    private static BaseAgent conversationEvaluationAgent = createConversationEvaluationAgent();
 
     // Agent 3 - The Next reply agent. Its only job is to determine the next reply to send
     private static BaseAgent nextReplyAgent = createNextReplyAgent();
 
-    private static BaseAgent createConversationAgent() {
+    private static BaseAgent createConversationEvaluationAgent() {
         return LlmAgent.builder()
                 .name(CONVERSATION_AGENT)
                 .model(USED_MODEL_NAME)
@@ -70,11 +70,11 @@ public class WhatsAppAgents {
     }
 
     // Agent 4 - The Master Orchestrator with Looping Logic. This is the new Root Agent.
-    public static BaseAgent createOrchestratorAgent() {
+    public static BaseAgent createOrchestratorAgentIntialContact() {
         return SequentialAgent.builder()
                 .name(MASTER_ORCHESTRATOR_PHONES_AGENT_NAME)
                 .description("Manages a data pipeline by fetching a list of phone numbers and then looping through them")
-                .subAgents(apiScoutAgent, new LoopingPhonesProcessorAgent(conversationAgent, nextReplyAgent))
+                .subAgents(apiScoutAgent, new InitialContactLoopingPhonesProcessorAgent(conversationEvaluationAgent, nextReplyAgent))
                 .build();
     }
 }

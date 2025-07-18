@@ -6,7 +6,8 @@ import com.google.adk.sessions.Session;
 import com.google.genai.types.Content;
 import com.google.genai.types.Part;
 import com.testehan.adk.agents.cm.agents.ListingAgents;
-import com.testehan.adk.agents.cm.agents.WhatsAppAgents;
+import com.testehan.adk.agents.cm.agents.WhatsAppExpiredListingAgents;
+import com.testehan.adk.agents.cm.agents.WhatsAppInitialContactAgents;
 import com.testehan.adk.agents.cm.config.ConfigLoader;
 import com.testehan.adk.agents.cm.tools.ListingUploader;
 import org.slf4j.Logger;
@@ -25,20 +26,22 @@ public class CMAgent {
     private static final Logger LOGGER = LoggerFactory.getLogger(CMAgent.class);
 
     // The run your agent with Dev UI, the ROOT_AGENT should be a global public static variable.
-    public static BaseAgent ROOT_AGENT = ListingAgents.createOrchestratorAgent();
-    public static BaseAgent ROOT_AGENT_WHATSAPP = WhatsAppAgents.createOrchestratorAgent();
+    public static BaseAgent ROOT_AGENT_ADD_LISTINGS = ListingAgents.createOrchestratorAgent();
+    public static BaseAgent ROOT_AGENT_WHATSAPP_INITIAL_CONTACT = WhatsAppInitialContactAgents.createOrchestratorAgentIntialContact();
+    public static BaseAgent ROOT_AGENT_WHATSAPP_EXPIRED_LISTING = WhatsAppExpiredListingAgents.createOrchestratorAgentExpiredListing();
 
     public static void main(String[] args) throws Exception {
         // Create a single-threaded executor that can schedule commands.
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
         ScheduledExecutorService scheduler2 = Executors.newSingleThreadScheduledExecutor();
+        ScheduledExecutorService scheduler3 = Executors.newSingleThreadScheduledExecutor();
 
         // Define the task that will be executed periodically.
         Runnable agentRunner = () -> {
             try {
                 LOGGER.info("EXECUTING Listing flow: Starting the orchestrator agent run...");
 
-                runRootAgent();
+                runRootAgentAddListings();
 
                 LOGGER.info("SUCCESS Listing flow: Orchestrator agent run finished.");
 
@@ -63,11 +66,27 @@ public class CMAgent {
             }
         };
 
-        LOGGER.info("Scheduler initialized. The Listing agent will run every 5 hours.");
+        Runnable agent3Runner = () -> {
+            try {
+                LOGGER.info("EXECUTING Expired listings flow: Starting the orchestrator agent run...");
+                runRootExpiredListings();
+
+                LOGGER.info("SUCCESS Expired listings flow: Orchestrator agent run finished.");
+
+            } catch (Exception e) {
+                LOGGER.error("ERROR: An exception occurred during agent execution: {}", e.getMessage());
+                e.printStackTrace();
+            }
+        };
+
+        LOGGER.info("Scheduler initialized. The Add Listing agent will run every 5 hours.");
         scheduler.scheduleAtFixedRate(agentRunner, 0, 5, TimeUnit.HOURS);
 
         LOGGER.info("Scheduler initialized. The Leads agent will run every 10 minutes.");
         scheduler2.scheduleAtFixedRate(agent2Runner, 0, 10, TimeUnit.MINUTES);
+
+        LOGGER.info("Scheduler initialized. The Expired Listings agent will run every 10 minutes.");
+//        scheduler3.scheduleAtFixedRate(agent3Runner, 0, 1, TimeUnit.MINUTES);
 
         // This application will keep running because the scheduler thread is active.
         // In a real server application, you would manage the lifecycle and
@@ -75,12 +94,12 @@ public class CMAgent {
 
     }
 
-    private static void runRootAgent() {
+    private static void runRootAgentAddListings() {
         // We now initialize the runner with our single ROOT_AGENT, the orchestrator.
-        InMemoryRunner runner = new InMemoryRunner(ROOT_AGENT);
+        InMemoryRunner runner = new InMemoryRunner(ROOT_AGENT_ADD_LISTINGS);
 
         Session session = runner.sessionService()
-                .createSession(ROOT_AGENT.name(), USER_ID)
+                .createSession(ROOT_AGENT_ADD_LISTINGS.name(), USER_ID)
                 .blockingGet();
 
         Content apiUrl = Content.fromParts(Part.fromText(ConfigLoader.getApiEndpointGetLeads()));
@@ -110,13 +129,37 @@ public class CMAgent {
 
     private static void runRootAgentWhatsApp() {
         // We now initialize the runner with our single ROOT_AGENT, the orchestrator.
-        InMemoryRunner runner = new InMemoryRunner(ROOT_AGENT_WHATSAPP);
+        InMemoryRunner runner = new InMemoryRunner(ROOT_AGENT_WHATSAPP_INITIAL_CONTACT);
 
         Session session = runner.sessionService()
-                .createSession(ROOT_AGENT_WHATSAPP.name(), USER_ID)
+                .createSession(ROOT_AGENT_WHATSAPP_INITIAL_CONTACT.name(), USER_ID)
                 .blockingGet();
 
         Content apiUrl = Content.fromParts(Part.fromText(ConfigLoader.getApiEndpointGetPhones()));
+
+        runner.runAsync(USER_ID, session.id(), apiUrl)
+                .filter(event -> {
+                    // We only want to process events that have a non-null stateDelta
+                    // and contain our specific result key.
+                    return( event.actions() == null || event.actions().stateDelta() == null);
+                })
+                .blockingForEach(event -> {
+                    LOGGER.info("State Delta: {}", event.actions().stateDelta());
+                });
+    }
+
+    private static void runRootExpiredListings() {
+        // We now initialize the runner with our single ROOT_AGENT, the orchestrator.
+        InMemoryRunner runner = new InMemoryRunner(ROOT_AGENT_WHATSAPP_EXPIRED_LISTING);
+
+        Session session = runner.sessionService()
+                .createSession(ROOT_AGENT_WHATSAPP_EXPIRED_LISTING.name(), USER_ID)
+                .blockingGet();
+
+        var apiEndpointGetLeadsWithStatus = ConfigLoader.getApiEndpointGetLeadsWithStatus();
+        var apiEndpointWithParam = String.format(apiEndpointGetLeadsWithStatus, "EXPIRED");
+
+        Content apiUrl = Content.fromParts(Part.fromText(apiEndpointWithParam));
 
         runner.runAsync(USER_ID, session.id(), apiUrl)
                 .filter(event -> {

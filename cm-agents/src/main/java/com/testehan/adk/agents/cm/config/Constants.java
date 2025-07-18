@@ -12,6 +12,8 @@ public class Constants {
 
     public static final String MASTER_ORCHESTRATOR_LISTINGS_AGENT_NAME = "listings_master_orchestrator_agent";
     public static final String MASTER_ORCHESTRATOR_PHONES_AGENT_NAME = "phones_master_orchestrator_agent";
+    public static final String MASTER_ORCHESTRATOR_EXPIRED_LISTINGS_AGENT_NAME = "expired_listings_master_orchestrator_agent";
+
     public static final String API_SCOUT_AGENT_NAME = "api_scout_agent";
     public static final String EXTRACTOR_AGENT_NAME = "extractor_agent";
     public static final String FORMATTER_AGENT = "formatter_agent";
@@ -42,8 +44,21 @@ public class Constants {
             "Salut! Îți scriem legat de proprietate %s. Mai este disponibilă pentru inchiriat?"
     ));
 
+    private static final List<String> REACTIVATE_LISTING_MESSAGES = new ArrayList<>(List.of(
+            "Salut! Anunțul tău de inchiriere a expirat pe casamia.ai. Doresti ca el sa fie reactivat?",
+            "Bună ziua! Anunțul tău a expirat pe platforma pe casamia.ai. Mai este disponibil?",
+            "Bună! Anunțul tău de inchiriere a expirat la noi pe casamia.ai . Mai este valabil?",
+            "Salut! Îți scriem legat de anunțul tău care a expirat pe casamia.ai. Mai este disponibil pentru inchiriat?"
+    ));
+
     public static String getRandomInitialMessage(String url){
         return String.format(INITIAL_LEAD_MESSAGES.get(new Random().nextInt(INITIAL_LEAD_MESSAGES.size())),url);
     }
+
+    public static String getRandomReactivateMessage(){
+        return REACTIVATE_LISTING_MESSAGES.get(new Random().nextInt(REACTIVATE_LISTING_MESSAGES.size()));
+    }
+
+
 
 }

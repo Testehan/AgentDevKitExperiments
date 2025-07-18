@@ -88,7 +88,7 @@ public class Tools {
             // Parse the JSON array of strings into a Java List<String>
             List<String> strings = OBJECT_MAPPER.readValue(responseBody, new TypeReference<>() {});
 
-            LOGGER.info("Successfully fetched {} strings from the API.", strings.size());
+            LOGGER.info("Successfully fetched {} strings from the API {}.", strings.size(), apiEndpoint);
             return Map.of("status", "success", OUTPUT_SCOUT_AGENT, strings);
 
         } catch (Exception e) {

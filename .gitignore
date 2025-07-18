@@ -2,3 +2,9 @@
 /target/
 /.idea/
 /cm-agents/src/main/resources/secrets.properties
+/cm-agents/target/
+/live-audio/target/
+/two-agents/target/
+/quickstart/target/
+/streaming/target/
+/workflow-agents/target/

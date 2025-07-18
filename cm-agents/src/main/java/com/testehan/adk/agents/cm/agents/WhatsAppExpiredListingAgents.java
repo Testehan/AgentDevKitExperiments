@@ -5,7 +5,7 @@ import com.google.adk.agents.LlmAgent;
 import com.google.adk.agents.SequentialAgent;
 import com.testehan.adk.agents.cm.agents.helpers.ExpiredListingLoopingPhonesProcessorAgent;
 
-import static com.testehan.adk.agents.cm.agents.helpers.CommonAgents.createApiScoutPhonesAgent;
+import static com.testehan.adk.agents.cm.agents.helpers.CommonAgents.createApiScoutPhoneUrlsAgent;
 import static com.testehan.adk.agents.cm.config.Constants.*;
 
 public class WhatsAppExpiredListingAgents {
@@ -14,7 +14,7 @@ public class WhatsAppExpiredListingAgents {
     // 2. determine via llm what message to send next
 
     // Agent 1 - The API Scout. Its only job is to call the API.
-    private static BaseAgent apiScoutExpiredListingPhoneNumbersAgent = createApiScoutPhonesAgent();
+    private static BaseAgent apiScoutExpiredListingPhoneNumbersAgent = createApiScoutPhoneUrlsAgent();
 
     // Agent 2 - The Conversation agent. Its only job is to determine if the user accepted to have its listing added
     private static BaseAgent conversationEvaluationAgent = createConversationEvaluationAgent();

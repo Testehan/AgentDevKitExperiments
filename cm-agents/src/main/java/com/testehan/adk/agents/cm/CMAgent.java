@@ -56,7 +56,7 @@ public class CMAgent {
         Runnable agent2Runner = () -> {
             try {
                 LOGGER.info("EXECUTING Leads flow: Starting the orchestrator agent run...");
-                runRootAgentWhatsApp();
+                runRootAgentWhatsAppInitialContact();
 
                 LOGGER.info("SUCCESS Leads flow: Orchestrator agent run finished.");
 
@@ -69,7 +69,7 @@ public class CMAgent {
         Runnable agent3Runner = () -> {
             try {
                 LOGGER.info("EXECUTING Expired listings flow: Starting the orchestrator agent run...");
-                runRootExpiredListings();
+                runRootAgentWhatsAppExpiredListings();
 
                 LOGGER.info("SUCCESS Expired listings flow: Orchestrator agent run finished.");
 
@@ -86,7 +86,7 @@ public class CMAgent {
         scheduler2.scheduleAtFixedRate(agent2Runner, 0, 10, TimeUnit.MINUTES);
 
         LOGGER.info("Scheduler initialized. The Expired Listings agent will run every 10 minutes.");
-//        scheduler3.scheduleAtFixedRate(agent3Runner, 0, 1, TimeUnit.MINUTES);
+        scheduler3.scheduleAtFixedRate(agent3Runner, 0, 10, TimeUnit.MINUTES);
 
         // This application will keep running because the scheduler thread is active.
         // In a real server application, you would manage the lifecycle and
@@ -127,7 +127,7 @@ public class CMAgent {
             });
     }
 
-    private static void runRootAgentWhatsApp() {
+    private static void runRootAgentWhatsAppInitialContact() {
         // We now initialize the runner with our single ROOT_AGENT, the orchestrator.
         InMemoryRunner runner = new InMemoryRunner(ROOT_AGENT_WHATSAPP_INITIAL_CONTACT);
 
@@ -148,7 +148,7 @@ public class CMAgent {
                 });
     }
 
-    private static void runRootExpiredListings() {
+    private static void runRootAgentWhatsAppExpiredListings() {
         // We now initialize the runner with our single ROOT_AGENT, the orchestrator.
         InMemoryRunner runner = new InMemoryRunner(ROOT_AGENT_WHATSAPP_EXPIRED_LISTING);
 

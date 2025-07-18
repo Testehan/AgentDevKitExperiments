@@ -36,8 +36,12 @@ public class ConfigLoader {
         return PROPERTIES.getProperty("api.endpoint.get.phones");
     }
 
-    public static String getApiEndpointPathLeadStatus() {
+    public static String getApiEndpointPatchLeadStatus() {
         return PROPERTIES.getProperty("api.endpoint.patch.lead.status");
+    }
+
+    public static String getApiEndpointGetLeadsWithStatus() {
+        return PROPERTIES.getProperty("api.endpoint.get.lead.status");
     }
 
     public static String getApiEndpointPostLeadReply() {

@@ -72,10 +72,10 @@ public class HumanizedBrowsing
     }
 
     @NotNull
-    private Map<String, Object> extractOlxData(ChromeOptions options, String fullUrl) {
+    private Map<String, Object> extractOlxData(ChromeOptions chromeOptions, String fullUrl) {
         WebDriver driver = null;
         try {
-            driver = new ChromeDriver(options);
+            driver = new ChromeDriver(chromeOptions);
             WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15)); // Increased wait time slightly
 
             driver.get(fullUrl);
@@ -136,7 +136,59 @@ public class HumanizedBrowsing
     }
 
     private Map<String, Object>  extractPubliData(ChromeOptions chromeOptions, String fullUrl) {
-        return Map.of("status", "error", "message", "NOT IMPLEMENTED ");
+        WebDriver driver = null;
+        try {
+            driver = new ChromeDriver(chromeOptions);
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15)); // Increased wait time slightly
+
+            driver.get(fullUrl);
+
+            wait.until(ExpectedConditions.presenceOfElementLocated(By.tagName("body")));
+            LOGGER.info("Page body loaded.");
+
+            // Simulate human scrolling : This is crucial for lazy-loading content and looks more natural.
+            simulateHumanScrolling(driver);
+
+            var mainContentSelector = "detail-left";
+            var mainListingText = "";
+            try {
+                WebElement mainContentContainer = wait.until(ExpectedConditions.presenceOfElementLocated(By.className(mainContentSelector)));
+                LOGGER.info("Found the main container.");
+                mainListingText = mainContentContainer.getAttribute("innerHTML");
+                LOGGER.info("publi24: " + mainListingText);
+            } catch (TimeoutException e) {
+                LOGGER.warn("Main content container with selector '{}' was not found on the page.", mainContentSelector);
+            }
+
+            var ownerNameSelector = "user-profile-name";
+            var ownerName = "";
+            try {
+                WebElement mainContentContainer = wait.until(ExpectedConditions.presenceOfElementLocated(By.className(ownerNameSelector)));
+                LOGGER.info("Found the owner name container.");
+                ownerName = mainContentContainer.getAttribute("innerHTML");
+                LOGGER.info("publi24: " + ownerName);
+            } catch (TimeoutException e) {
+                LOGGER.warn("Main content container with selector '{}' was not found on the page.", mainContentSelector);
+            }
+
+            LOGGER.info("Obtained page text successfully.");
+
+            var extractedData = "Page Text: " + mainListingText + " owner name : " + ownerName;
+
+            return Map.of(
+                    "status", "success",
+                    "extractedData", extractedData
+            );
+
+        } catch (Exception e) {
+            LOGGER.error("An unexpected error occurred during scraping", e);
+            return Map.of("status", "error", "message", e.getMessage());
+        } finally {
+            if (driver != null) {
+                driver.quit();
+                LOGGER.info("WebDriver has been closed.");
+            }
+        }
     }
 
     private Map<String, Object>  handleDefault(String url) {

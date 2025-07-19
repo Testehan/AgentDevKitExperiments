@@ -27,13 +27,21 @@ public class WhatsAppExpiredListingAgents {
                 .name(CONVERSATION_AGENT)
                 .model(USED_MODEL_NAME)
                 .description("This agent determines based on a conversation if the user agrees to have its expired listing reactivated.")
-                .instruction("Your mission is to determine if the user gives its consent for their listing to be reactivated " +
+                .instruction("You are given a conversation that lead to a user accepting to have its property listed on CasaMia.ai app." +
+                        "This conversation happened close to 2 weeks ago. " +
+                        "Very IMPORTANT: Your current mission is to determine if the user gives its consent for their listing to be REACTIVATED " +
                         "on the casamia.ai website. The history of the conversation until now is : " +
                         "'{"+ AGENT_VAR_CURRENT_CONVERSATION +"}'." +
                         "You must return one, and only one of the following possible values : " +
                         "1. \"true\" - in case the user gave their consent for the listing to be reactivated" +
                         "2. \"false\" - in case the user doesn't want their listing to be reactivated" +
-                        "5. \"undecided\" - if the conversation is ongoing and you can't determine if the user's response is true or false ")
+                        "3. \"undecided\" - if the conversation is ongoing and you can't determine if the user's response is true or false OR if" +
+                        "the conversation does not contain a message sent by CasaMia.ai similar to the following that is asking if" +
+                        "listing is still available : " +
+                        "             \"Salut! Anunțul tău de inchiriere a expirat pe casamia.ai. Doresti ca el sa fie reactivat?\",\n" +
+                        "            \"Bună ziua! Anunțul tău a expirat pe platforma pe casamia.ai. Mai este disponibil?\",\n" +
+                        "            \"Bună! Anunțul tău de inchiriere a expirat la noi pe casamia.ai . Mai este valabil?\",\n" +
+                        "            \"Salut! Îți scriem legat de anunțul tău care a expirat pe casamia.ai. Mai este disponibil pentru inchiriat?\" ")
                 .outputKey(OUTPUT_CONVERSATION_AGENT) // Key for storing output in session state
                 .build();
     }
@@ -47,6 +55,11 @@ public class WhatsAppExpiredListingAgents {
                         "You are helping write the next WhatsApp message in an ongoing conversation. " +
                                 "The goal of the conversation is to see if the user wants its expired listing to be reactivated. " +
                                 "Ask the user's permission to reactivate the real estate listing on CasaMia.ai platform.\n\n" +
+                                "Examples: " +
+                                    "Salut! Anunțul tău de inchiriere a expirat pe casamia.ai. Doresti ca el sa fie reactivat?" +
+                                    "Bună ziua! Anunțul tău a expirat pe platforma pe casamia.ai. Mai este disponibil?" +
+                                    "Bună! Anunțul tău de inchiriere a expirat la noi pe casamia.ai . Mai este valabil?" +
+                                    "Salut! Îți scriem legat de anunțul tău care a expirat pe casamia.ai. Mai este disponibil pentru inchiriat?" +
 
                                 "CasaMia.ai Info:\n" +
                                 "- Adding listings is free.\n" +

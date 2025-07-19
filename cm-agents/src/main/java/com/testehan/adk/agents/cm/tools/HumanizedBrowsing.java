@@ -15,7 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class HumanizedBrowsing
@@ -29,26 +29,27 @@ public class HumanizedBrowsing
             "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36"
     );
 
-    private final Map<String, BiFunction<ChromeOptions, String, Map>> domainHandlers = new HashMap<>();
+    private final Map<String, Function<String, Map>> domainHandlers = new HashMap<>();
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HumanizedBrowsing.class);
+
+    private final ChromeOptions chromeOptions;
 
     public HumanizedBrowsing() {
         domainHandlers.put("https://www.olx.ro/",this::extractOlxData);
         domainHandlers.put("https://www.publi24.ro/",this::extractPubliData);
+
+        chromeOptions = initializeChromeOptions();
     }
 
-    public Map<String, Object> browseUrl(String targetUrl) {
-        LOGGER.info("fetch from {}", targetUrl);
-
-        var encodedTargetUrl = URLEncoder.encode(targetUrl, StandardCharsets.UTF_8);
-        var fullUrl = String.format(PROXIED_URL_TEMPLATE, ConfigLoader.getScraperApiKey(), encodedTargetUrl);
-
+    @NotNull
+    private ChromeOptions initializeChromeOptions() {
+        final ChromeOptions chromeOptions;
         // Select a random User-Agent for this session
         String randomUserAgent = USER_AGENTS.get(new Random().nextInt(USER_AGENTS.size()));
         LOGGER.info("Using User-Agent: {}", randomUserAgent);
 
-        ChromeOptions chromeOptions = new ChromeOptions();
+        chromeOptions = new ChromeOptions();
         chromeOptions.addArguments("--headless=new");
         chromeOptions.addArguments("--disable-gpu");
         chromeOptions.addArguments("--window-size=1920,1080");
@@ -61,10 +62,18 @@ public class HumanizedBrowsing
         // For IP Rotation (Advanced): Uncomment to use a proxy
         // String proxy = "http://your-proxy-host:port";
         // chromeOptions.addArguments("--proxy-server=" + proxy);
+        return chromeOptions;
+    }
+
+    public Map<String, Object> browseUrl(String targetUrl) {
+        LOGGER.info("fetch from {}", targetUrl);
+
+        var encodedTargetUrl = URLEncoder.encode(targetUrl, StandardCharsets.UTF_8);
+        var fullUrl = String.format(PROXIED_URL_TEMPLATE, ConfigLoader.getScraperApiKey(), encodedTargetUrl);
 
         for (var entry : domainHandlers.entrySet()) {
             if (targetUrl.startsWith(entry.getKey())) {
-                return entry.getValue().apply(chromeOptions, fullUrl);
+                return entry.getValue().apply(fullUrl);
             }
         }
 
@@ -72,7 +81,7 @@ public class HumanizedBrowsing
     }
 
     @NotNull
-    private Map<String, Object> extractOlxData(ChromeOptions chromeOptions, String fullUrl) {
+    private Map<String, Object> extractOlxData(String fullUrl) {
         WebDriver driver = null;
         try {
             driver = new ChromeDriver(chromeOptions);
@@ -135,7 +144,7 @@ public class HumanizedBrowsing
         }
     }
 
-    private Map<String, Object>  extractPubliData(ChromeOptions chromeOptions, String fullUrl) {
+    private Map<String, Object>  extractPubliData(String fullUrl) {
         WebDriver driver = null;
         try {
             driver = new ChromeDriver(chromeOptions);

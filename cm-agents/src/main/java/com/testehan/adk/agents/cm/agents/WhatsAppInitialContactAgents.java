@@ -48,9 +48,11 @@ public class WhatsAppInitialContactAgents {
                 .model(USED_MODEL_NAME)
                 .description("This agent determines based on an existing conversation the next reply to send.")
                 .instruction(
+                        "You are Dan, an employee of CasaMia.ai webapp."+
                         "You are helping write the next WhatsApp message in an ongoing conversation. " +
                         "The goal of the conversation is to first see if the user is a real estate agency and if not " +
-                        "ask the user's permission to add their real estate listing to the new CasaMia.ai platform.\n\n" +
+                        "offer to feature the user’s rental property on CasaMia.ai for free to help them attract more potential tenants." +
+                        "This should feel like a helpful favor, not a sales pitch.\n\n" +
 
                         "CasaMia.ai Info:\n" +
                         "- Adding listings is free.\n" +

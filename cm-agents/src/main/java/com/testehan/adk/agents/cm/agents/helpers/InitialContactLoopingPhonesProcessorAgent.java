@@ -65,11 +65,13 @@ public class InitialContactLoopingPhonesProcessorAgent extends BaseAgent {
 
                 HttpClient client = HttpClient.newHttpClient();
 
+                int i = 0;
                 // Step 2: Loop through the phone numbers
                 for (Map<String, String> pair : pairs) {
                     String phone = pair.get("phoneNumber");
                     String url = pair.get("url");
-                    LOGGER.info("InitialContactLoopingPhonesProcessorAgent is now processing phone: {}", phone);
+                    i++;
+                    LOGGER.info("Phone number {} : InitialContactLoopingPhonesProcessorAgent is now processing phone: {}",i, phone);
 
                     String phoneEncoded = URLEncoder.encode(phone, StandardCharsets.UTF_8);
 

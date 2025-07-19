@@ -49,7 +49,8 @@ public class LoopingUrlsProcessorAgent extends BaseAgent {
     @Override
     protected Flowable<Event> runAsyncImpl(InvocationContext ctx) {
         // Step 1: Get the input from the previous agent
-        String jsonUrls = (String) ctx.session().state().get(OUTPUT_SCOUT_AGENT);
+        String jsonUrlsOutput = (String) ctx.session().state().get(OUTPUT_SCOUT_AGENT);
+        final String jsonUrls = jsonUrlsOutput.replaceFirst("(?s)```json\\s*", "").replaceFirst("(?s)```\\s*$", "");
 
         return Flowable.create(emitter -> {
             try {

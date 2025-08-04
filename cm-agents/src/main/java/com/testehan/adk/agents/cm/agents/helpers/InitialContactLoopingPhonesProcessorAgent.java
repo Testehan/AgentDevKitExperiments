@@ -186,19 +186,19 @@ public class InitialContactLoopingPhonesProcessorAgent extends BaseAgent {
     }
 
     private static void postLeadReply(HttpClient client, String phoneNumber, String reply, Boolean isFirstMessage) throws IOException, InterruptedException {
-        HttpRequest request;
-        String phoneEncoded = URLEncoder.encode(phoneNumber, StandardCharsets.UTF_8);
-        String replyEncoded = URLEncoder.encode(reply, StandardCharsets.UTF_8);
-
-        request = HttpRequest.newBuilder()
-                .uri(URI.create(getApiEndpointPostLeadReply() + "?phoneNumber=" + phoneEncoded + "&reply=" + replyEncoded + "&isFirstMessage=" + isFirstMessage))
-                .method("POST", HttpRequest.BodyPublishers.noBody())
-                .header("Content-Type", "application/json")
-                .header("Authorization", getAuthenticationHeaderValue())
-                .build();
-
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        LOGGER.info("- Lead reply sent -> Response code: {}  Response body: {}", response.statusCode(), response.body());
+//        HttpRequest request;
+//        String phoneEncoded = URLEncoder.encode(phoneNumber, StandardCharsets.UTF_8);
+//        String replyEncoded = URLEncoder.encode(reply, StandardCharsets.UTF_8);
+//
+//        request = HttpRequest.newBuilder()
+//                .uri(URI.create(getApiEndpointPostLeadReply() + "?phoneNumber=" + phoneEncoded + "&reply=" + replyEncoded + "&isFirstMessage=" + isFirstMessage))
+//                .method("POST", HttpRequest.BodyPublishers.noBody())
+//                .header("Content-Type", "application/json")
+//                .header("Authorization", getAuthenticationHeaderValue())
+//                .build();
+//
+//        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+//        LOGGER.info("- Lead reply sent -> Response code: {}  Response body: {}", response.statusCode(), response.body());
     }
 
 

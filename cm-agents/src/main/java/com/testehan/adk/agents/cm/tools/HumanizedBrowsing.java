@@ -126,7 +126,18 @@ public class HumanizedBrowsing
                 LOGGER.warn("Image gallery container with selector '{}' was not found on the page.", gallerySelector);
             }
 
-            var extractedData = "Page Text: " + text + "\n\n" + "Image URLs: " + imageUrls;
+            // Find the <img alt="Location"> element
+            WebElement locationIcon = driver.findElement(By.xpath("//img[@alt='Location']"));
+
+            // Find the following <div>
+            WebElement cityDiv = locationIcon.findElement(By.xpath("following-sibling::div"));
+
+            // Find the first <p> element inside that div
+            WebElement firstParagraph = cityDiv.findElement(By.xpath(".//p[1]"));
+
+            var extractedData = "Page Text: " + text + "\n\n" +
+                                "City name: " + firstParagraph.getText() + "\n\n" +
+                                "Image URLs: " + imageUrls;
 
             return Map.of(
                     "status", "success",

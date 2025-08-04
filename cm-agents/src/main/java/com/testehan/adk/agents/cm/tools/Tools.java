@@ -11,10 +11,12 @@ import com.networknt.schema.ValidationMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -151,6 +153,43 @@ public class Tools {
         return humanizedBrowsing.browseUrl(url);
     }
 
+
+    @Annotations.Schema(
+            name = TOOL_FORMAT_LISTING_LOCAL,
+            description = "Sends scraped text to a local endpoint for formatting."
+    )
+    public static Map<String, Object> formatListingLocal(@Annotations.Schema(name = "scrapedText", description = "The scrapedText that must be sent to the local endpoint for formatting")
+                                                          String scrapedText) {
+
+        String endpointUrl = "http://localhost:8077/api/v1/ollama/format";
+
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(endpointUrl))
+                .header("Content-Type", "text/plain")
+                .timeout(Duration.ofMinutes(3))
+                .POST(HttpRequest.BodyPublishers.ofString(scrapedText))
+                .build();
+
+        try {
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200) {
+                // ADK tools should return a Map.
+                return OBJECT_MAPPER.readValue(response.body(), new TypeReference<Map<String, Object>>() {});
+            } else {
+                String errorMessage = "Error: Local endpoint returned status code " + response.statusCode()
+                        + " with body: " + response.body();
+                LOGGER.error("EXECUTING TOOL_FORMAT_LISTING_LOCAL: {}",errorMessage);
+                return Map.of("error", errorMessage);
+            }
+        } catch (IOException | InterruptedException e) {
+            Thread.currentThread().interrupt();
+            String errorMessage = "Error calling local formatting endpoint: " + e.getMessage();
+            LOGGER.error("EXECUTING TOOL_FORMAT_LISTING_LOCAL: {}",errorMessage);
+            return Map.of("error", errorMessage);
+        }
+    }
 
 
     /**

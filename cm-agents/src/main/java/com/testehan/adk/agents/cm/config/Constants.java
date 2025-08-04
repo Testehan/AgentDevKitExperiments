@@ -17,6 +17,7 @@ public class Constants {
     public static final String API_SCOUT_AGENT_NAME = "api_scout_agent";
     public static final String EXTRACTOR_AGENT_NAME = "extractor_agent";
     public static final String FORMATTER_AGENT = "formatter_agent";
+    public static final String CUSTOM_LOCAL_FORMATTER_AGENT = "custom_local_formatter_agent";
     public static final String CONVERSATION_AGENT = "conversation_agent";
     public static final String NEXT_REPLY_AGENT = "next_reply_agent";
 
@@ -33,6 +34,7 @@ public class Constants {
     public static final String TOOL_GET_STRINGS = "getStringsFromApi";
     public static final String TOOL_GET_MAPS= "getMapsFromApi";
     public static final String TOOL_EXTRACT = "extractPageContentAndImages";
+    public static final String TOOL_FORMAT_LISTING_LOCAL = "formatListingLocal";
 
 
     private static final List<String> INITIAL_LEAD_MESSAGES = new ArrayList<>(List.of(

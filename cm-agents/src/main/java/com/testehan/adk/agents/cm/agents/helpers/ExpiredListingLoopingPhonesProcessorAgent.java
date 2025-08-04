@@ -65,11 +65,13 @@ public class ExpiredListingLoopingPhonesProcessorAgent extends BaseAgent {
 
                 HttpClient client = HttpClient.newHttpClient();
 
+                int i = 0;
                 // Step 2: Loop through the phone numbers
                 for (Map<String, String> pair : pairs) {
+                    i++;
                     String phone = pair.get("phoneNumber");
                     String url = pair.get("url");
-                    LOGGER.info("ExpiredListingLoopingPhonesProcessorAgent is now processing phone: {}", phone);
+                    LOGGER.info("Phone number {} : ExpiredListingLoopingPhonesProcessorAgent is now processing phone: {}", i, phone);
 
                     String phoneEncoded = URLEncoder.encode(phone, StandardCharsets.UTF_8);
 
@@ -131,9 +133,11 @@ public class ExpiredListingLoopingPhonesProcessorAgent extends BaseAgent {
                     {
                         reactivateListing(client, url);
                         updateLeadStatus(client, phone, "DONE");
+                        postLeadReply(client, phone, "Anuntul a fost reactivat :)", false);
                     } else if (userConsent.equalsIgnoreCase("false")){
                         // leave deactivated
                         updateLeadStatus(client, phone, "DONE");
+                        postLeadReply(client, phone, "Am inteles. Anuntul ramane dezactivat.", false);
                     } else if (userConsent.equalsIgnoreCase("undecided")){
 
                         LOGGER.info("--- 🚀 RUNNING Next Reply AGENT ---");

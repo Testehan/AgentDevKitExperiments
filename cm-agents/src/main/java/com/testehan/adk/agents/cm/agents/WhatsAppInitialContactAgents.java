@@ -34,7 +34,7 @@ public class WhatsAppInitialContactAgents {
                                 "'{"+ AGENT_VAR_CURRENT_CONVERSATION +"}'." +
                                 "You must return one, and only one of the following possible values : " +
                         "1. \"ACCEPTED\" - in case the user gave their consent and it is not a real estate agent" +
-                        "2. \"DECLINED\" - in case the user rejected the offer and the user is not is a real estate agency" +
+                        "2. \"DECLINED\" - in case the user rejected the offer and the user is not is a real estate agency or if the user wants to discuss in a phone call" +
                         "3. \"ALREADY_RENTED\" - if the property was already rented and the user is not a real estate agency" +
                         "4. \"REAL_ESTATE_COMPANY\" - if the user is a real estate agency" +
                         "5. \"undecided\" - if the conversation is ongoing and you can't determine if any of the previous answer possibilities is true")

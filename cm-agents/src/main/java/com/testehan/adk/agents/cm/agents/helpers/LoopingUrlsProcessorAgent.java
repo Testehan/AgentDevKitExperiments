@@ -91,7 +91,7 @@ public class LoopingUrlsProcessorAgent extends BaseAgent {
 
                     String rawOutput = "";
                     // The final response from the agent is an Event. We can get the text directly from its content.
-                    if (finalEvent != null && FORMATTER_AGENT.equals(finalEvent.author())) {
+                    if (finalEvent != null && CUSTOM_LOCAL_FORMATTER_AGENT.equals(finalEvent.author())) { // TODO HERE USE FORMATTER_AGENT if you want to use online LLM
                         // The content() method on the Event gives us the payload.
                         // The text() method on Content concatenates all parts into a single string.
                         rawOutput = finalEvent.content().get().text();

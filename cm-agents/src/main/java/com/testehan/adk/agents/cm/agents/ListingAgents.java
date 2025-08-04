@@ -4,6 +4,7 @@ import com.google.adk.agents.BaseAgent;
 import com.google.adk.agents.LlmAgent;
 import com.google.adk.agents.SequentialAgent;
 import com.google.adk.tools.FunctionTool;
+import com.testehan.adk.agents.cm.agents.helpers.CustomLocalFormatterAgent;
 import com.testehan.adk.agents.cm.agents.helpers.LoopingUrlsProcessorAgent;
 import com.testehan.adk.agents.cm.tools.Tools;
 
@@ -19,8 +20,11 @@ public class ListingAgents {
     // Agent 2 - The Extractor Agent. Its only job is to extract data and make sure it is valid.
     private static BaseAgent extractor = createExtractorAgent();
 
-    // Agent 3 - The Formatter Agent. Its only job is to format the input to the provided schema.
+    // Agent 3 - The Formatter Gemini Agent. Its only job is to format the input to the provided schema.
     private static BaseAgent formatter = createFormatterAgent();
+
+    // Agent 3 - The Formatter Local Agent. Its only job is to format the input to the provided schema.
+    private static BaseAgent formatterLocal = new CustomLocalFormatterAgent(CUSTOM_LOCAL_FORMATTER_AGENT,CUSTOM_LOCAL_FORMATTER_AGENT);
 
     private static BaseAgent createExtractorAgent() {
         return LlmAgent.builder()
@@ -81,12 +85,30 @@ public class ListingAgents {
                 .build();
     }
 
+    private static BaseAgent createLocalFormatterAgent() {
+
+        return LlmAgent.builder()
+                .name(FORMATTER_AGENT)          // TODO ALSO SEND the schema to the endpoint
+                .model(USED_MODEL_NAME)
+                .description("This agent calls a tool and returns the result of that tool.")
+                .instruction(
+                        "You are a formatting agent. Your task is to process raw text provided under the variable '{" + AGENT_VAR_LISTING_SCRAPED_TEXT +"}'. " +
+                        "To do this, you MUST use the " + TOOL_FORMAT_LISTING_LOCAL + " tool. " +
+                        "Pass the value of '{" + AGENT_VAR_LISTING_SCRAPED_TEXT + "}' as the 'scrapedText' argument to the tool. " +
+                        "After you get the result from the tool, your job is done. Output the raw result from the tool directly."+
+                        "You MUST output the result from the tool directly and immediately as your final answer. " +
+                        "Do not add, remove, or change anything. Do not perform any other steps or analysis.")
+                // 3. Add the tool to the agent.
+                .tools(FunctionTool.create(Tools.class, TOOL_FORMAT_LISTING_LOCAL))
+                .build();
+    }
+
     // Agent 4 - The Master Orchestrator with Looping Logic. This is the new Root Agent.
     public static BaseAgent createOrchestratorAgent() {
         return SequentialAgent.builder()
                 .name(MASTER_ORCHESTRATOR_LISTINGS_AGENT_NAME)
                 .description("Manages a data pipeline by fetching a list of URLs and then looping through them to call an extractor agent for each.")
-                .subAgents(apiScout, new LoopingUrlsProcessorAgent(extractor,formatter))
+                .subAgents(apiScout, new LoopingUrlsProcessorAgent(extractor,formatterLocal))  // TODO HERE USE formatter if you want to use online LLM
                 .build();
     }
 

@@ -11,7 +11,7 @@ import com.networknt.schema.ValidationMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -161,13 +161,14 @@ public class Tools {
     public static Map<String, Object> formatListingLocal(@Annotations.Schema(name = "scrapedText", description = "The scrapedText that must be sent to the local endpoint for formatting")
                                                           String scrapedText) {
 
+        // this is the local spring app that connects to ollama
         String endpointUrl = "http://localhost:8077/api/v1/ollama/format";
 
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(endpointUrl))
                 .header("Content-Type", "text/plain")
-                .timeout(Duration.ofMinutes(3))
+                .timeout(Duration.ofMinutes(5))
                 .POST(HttpRequest.BodyPublishers.ofString(scrapedText))
                 .build();
 
@@ -191,6 +192,123 @@ public class Tools {
         }
     }
 
+
+    /**
+     * Executes the Gemini CLI with a given prompt and returns the output.
+     *
+     * @param scrapedText The text prompt to send to Gemini.
+     * @return The response from the Gemini CLI.
+     * @throws IOException If an I/O error occurs.
+     * @throws InterruptedException If the current thread is interrupted while waiting.
+     */
+    @Annotations.Schema(
+            name = TOOL_FORMAT_LISTING_LOCAL_GEMINI,
+            description = "Sends scraped text to a local Gemini for formatting."
+    )
+    public static Map<String, Object> formatListingLocalGemini(@Annotations.Schema(name = "scrapedText", description = "The scrapedText that must be sent to the local endpoint for formatting")
+                                        String scrapedText) {
+        try {
+            Map<String, Object> standardSchemaMap = buildStandardJsonSchema();
+            String standardSchemaJson = OBJECT_MAPPER.writeValueAsString(standardSchemaMap);
+
+            String PROMPT_FORMAT_LISTING = """
+            Ești un expert în formatarea JSON. Vei primi un text brut: {rawText}
+            Nu încerca să extragi date de pe internet sau să navighezi. Nu genera date. Singura ta sarcină este să convertești textul furnizat într-un obiect JSON valid care respectă schema furnizată.
+            Textul furnizat ca input este în limba română. Textul furnizat la final trebuie să fie tot în limba română.
+            
+            Foarte important:
+            - Câmpul „city” trebuie să conțină un nume real de oraș din România. Dacă valoarea este „Cluj”, folosește „Cluj-Napoca”.
+            - Nu inventa adrese. Dacă nu este menționată o stradă, lasă doar cartierul sau zona (ex: „Nufărul”).
+            - Nu adăuga sau inventa detalii care nu sunt prezente în text.
+            
+            La formatarea câmpului „name”:
+            - Rescrie numele astfel încât să sune profesionist, concis și atractiv.
+            - NU include cuvinte precum „Proprietar”, „PF”, „închiriez” sau „de închiriat”.
+            - Evidențiază numărul de camere, suprafața și zona, dacă sunt disponibile.
+            - Păstrează-l sub 70 de caractere.
+            - NU adăuga sau inventa detalii care nu sunt prezente în textul de intrare.
+            
+            La formatarea câmpului „shortDescription”:
+            - Include TOATE informațiile utile din textul original, fără a omite detalii.
+            - Păstrează detalii despre compartimentare, dotări, suprafață, balcon, an construcție, etaj, mobilier, echipamente, reguli (fumat, animale) și condiții de închiriere.
+            - Poți reformula pentru claritate și coerență, dar NU rezuma și NU scurta textul.
+            - Menține un ton natural, fluent și complet. Este preferabil ca textul să fie lung, dar informativ.
+            - Nu adăuga referințe la platforme imobiliare (ex: OLX, Publi24).
+            
+            La formatarea câmpului „area”:
+            - Extrage cea mai precisă informație de localizare disponibilă.
+            - Poate fi numele unei străzi, cartier, piață sau punct de reper cunoscut.
+            - Urmează ordinea: adresă exactă > cartier > punct de reper.
+            - Dacă nu este menționat nimic, lasă câmpul gol.
+            - NU inventa locații inexistente.
+            
+            Iată DEFINIȚIA SCHEMEI PE CARE ȘIRUL TĂU JSON FINAL TREBUIE SĂ O RESPECTE:
+            {format}
+            
+            ATENȚIE: Descrierea trebuie să fie completă. Nu omite niciun detaliu prezent în textul original, chiar dacă pare minor.
+            
+            Răspunsul tău final TREBUIE să fie NUMAI șirul JSON brut. Nu-l încadra în markdown și nu adăuga niciun alt text.
+            """;
+
+            String prompt = PROMPT_FORMAT_LISTING.replace("{rawText}", scrapedText)
+                    .replace("{format}", standardSchemaJson);
+
+            // 1. Create the ProcessBuilder
+            // This command assumes 'gemini' is in your system's PATH.
+            // If not, you'd need to provide the full path to the executable.
+            ProcessBuilder processBuilder = new ProcessBuilder("gemini");
+
+            // Optional: Merge the error stream with the standard output stream.
+            // This is convenient for capturing both normal output and errors in one place.
+            processBuilder.redirectErrorStream(true);
+
+            StringBuilder output = new StringBuilder();
+
+            // 2. Start the Process
+            Process process = null;
+
+            process = processBuilder.start();
+
+
+            // 3. Send the Prompt (write to the process's standard input)
+            // We use a try-with-resources block to ensure the writer is closed automatically.
+            try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()))) {
+                writer.write(prompt);
+                // IMPORTANT: You must close the writer. This sends the EOF (End-of-File) signal
+                // to the gemini process, letting it know that the input is complete.
+                // Without this, the gemini process will wait for more input forever.
+            }
+
+            // 4. Read the Response (read from the process's standard output)
+            // Use try-with-resources for the reader as well.
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    output.append(line).append(System.lineSeparator());
+                }
+            }
+
+            String formattedListing = output.toString().replaceFirst("(?s)```json\\s*", "").replaceFirst("(?s)```\\s*$", "");
+            // 5. Wait for the process to complete and check the exit code
+            int exitCode = process.waitFor();
+
+            if (exitCode != 0) {
+                // If the exit code is non-zero, something went wrong.
+                // The captured output may contain the error message.
+                var errorMessage = "Gemini CLI exited with a non-zero code: " + exitCode + "\nOutput:\n" + output;
+                LOGGER.error("EXECUTING TOOL_FORMAT_LISTING_LOCAL_GEMINI: {}",errorMessage);
+                return Map.of("error", errorMessage);
+            } else {
+                return OBJECT_MAPPER.readValue(formattedListing, new TypeReference<Map<String, Object>>() {});
+            }
+
+        } catch (IOException | InterruptedException e) {
+            String errorMessage = "Error calling local formatting endpoint: " + e.getMessage();
+            LOGGER.error("EXECUTING TOOL_FORMAT_LISTING_LOCAL: {}",errorMessage);
+            return Map.of("error", errorMessage);
+
+        }
+    }
 
     /**
      * Validates if the given JSON string conforms to the provided agent Schema.

@@ -93,13 +93,13 @@ public class ListingAgents {
                 .description("This agent calls a tool and returns the result of that tool.")
                 .instruction(
                         "You are a formatting agent. Your task is to process raw text provided under the variable '{" + AGENT_VAR_LISTING_SCRAPED_TEXT +"}'. " +
-                        "To do this, you MUST use the " + TOOL_FORMAT_LISTING_LOCAL + " tool. " +
+                        "To do this, you MUST use the " + TOOL_FORMAT_LISTING_LOCAL_GEMINI + " tool. " +
                         "Pass the value of '{" + AGENT_VAR_LISTING_SCRAPED_TEXT + "}' as the 'scrapedText' argument to the tool. " +
                         "After you get the result from the tool, your job is done. Output the raw result from the tool directly."+
                         "You MUST output the result from the tool directly and immediately as your final answer. " +
                         "Do not add, remove, or change anything. Do not perform any other steps or analysis.")
                 // 3. Add the tool to the agent.
-                .tools(FunctionTool.create(Tools.class, TOOL_FORMAT_LISTING_LOCAL))
+                .tools(FunctionTool.create(Tools.class, TOOL_FORMAT_LISTING_LOCAL_GEMINI))
                 .build();
     }
 

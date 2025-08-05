@@ -40,7 +40,7 @@ public class CustomLocalFormatterAgent extends BaseAgent {
             ));
         }
 
-        Map<String, Object> formattedResult = Tools.formatListingLocal(rawText);
+        Map<String, Object> formattedResult = Tools.formatListingLocalGemini(rawText);
         String formattedJsonString = "";
         try {
              formattedJsonString = OBJECT_MAPPER.writeValueAsString(formattedResult);

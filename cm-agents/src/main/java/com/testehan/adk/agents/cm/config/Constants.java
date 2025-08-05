@@ -35,6 +35,7 @@ public class Constants {
     public static final String TOOL_GET_MAPS= "getMapsFromApi";
     public static final String TOOL_EXTRACT = "extractPageContentAndImages";
     public static final String TOOL_FORMAT_LISTING_LOCAL = "formatListingLocal";
+    public static final String TOOL_FORMAT_LISTING_LOCAL_GEMINI = "formatListingLocalGemini";
 
 
     private static final List<String> INITIAL_LEAD_MESSAGES = new ArrayList<>(List.of(

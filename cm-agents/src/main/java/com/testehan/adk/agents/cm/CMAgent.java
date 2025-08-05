@@ -83,10 +83,10 @@ public class CMAgent {
         scheduler.scheduleAtFixedRate(agentRunner, 0, 5, TimeUnit.HOURS);
 
         LOGGER.info("Scheduler initialized. The Leads agent will run every 10 minutes.");
-        scheduler2.scheduleAtFixedRate(agent2Runner, 0, 10, TimeUnit.MINUTES);
+//        scheduler2.scheduleAtFixedRate(agent2Runner, 0, 10, TimeUnit.MINUTES);
 
         LOGGER.info("Scheduler initialized. The Expired Listings agent will run every 10 minutes.");
-        scheduler3.scheduleAtFixedRate(agent3Runner, 0, 10, TimeUnit.MINUTES);
+//        scheduler3.scheduleAtFixedRate(agent3Runner, 0, 10, TimeUnit.MINUTES);
 
         // This application will keep running because the scheduler thread is active.
         // In a real server application, you would manage the lifecycle and

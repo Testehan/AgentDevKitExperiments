@@ -170,30 +170,97 @@ public class HumanizedBrowsing
             simulateHumanScrolling(driver);
 
             var mainContentSelector = "detail-left";
-            var mainListingText = "";
+            StringBuilder mainListingText = new StringBuilder();
+            mainListingText.append("Text from where to extract image URLS: ");
             try {
                 WebElement mainContentContainer = wait.until(ExpectedConditions.presenceOfElementLocated(By.className(mainContentSelector)));
                 LOGGER.info("Found the main container.");
-                mainListingText = mainContentContainer.getAttribute("innerHTML");
+                WebElement scriptElement = mainContentContainer.findElement(By.tagName("script"));
+                // 3. Get the content of the script element
+                var scriptContent = scriptElement.getAttribute("innerHTML");
+                mainListingText.append(scriptContent);
+
                 LOGGER.info("publi24: " + mainListingText);
             } catch (TimeoutException e) {
                 LOGGER.warn("Main content container with selector '{}' was not found on the page.", mainContentSelector);
             }
 
             var ownerNameSelector = "user-profile-name";
+            mainListingText.append(" \n Owner name : ");
             var ownerName = "";
             try {
                 WebElement mainContentContainer = wait.until(ExpectedConditions.presenceOfElementLocated(By.className(ownerNameSelector)));
-                LOGGER.info("Found the owner name container.");
                 ownerName = mainContentContainer.getAttribute("innerHTML");
+                mainListingText.append(ownerName);
                 LOGGER.info("publi24: " + ownerName);
+            } catch (TimeoutException e) {
+                LOGGER.warn("Main content container with selector '{}' was not found on the page.", mainContentSelector);
+            }
+
+            mainListingText.append(" \n Listing name : ");
+            var listingName = "";
+            try {
+                listingName = driver.findElement(By.cssSelector("h1[itemprop='name']")).getText();
+                mainListingText.append(listingName);
+                LOGGER.info("publi24: " + listingName);
+            } catch (TimeoutException e) {
+                LOGGER.warn("Main content container with selector '{}' was not found on the page.", mainContentSelector);
+            }
+
+            mainListingText.append(" \n Price : ");
+            var price = "";
+            try {
+                price = driver.findElement(By.cssSelector("[itemprop='price']")).getText();
+                mainListingText.append(price);
+                LOGGER.info("publi24: " + price);
+            } catch (TimeoutException e) {
+                LOGGER.warn("Main content container with selector '{}' was not found on the page.", mainContentSelector);
+            }
+
+            mainListingText.append(" \n City : ");
+            var city = "";
+            try {
+                WebElement placeContainer = driver.findElement(By.cssSelector("div[itemtype='https://schema.org/Place']"));
+                List<WebElement> locationLinks = placeContainer.findElements(By.cssSelector("a[itemprop='url']"));
+                if (locationLinks.size() > 1) {
+                    // The city is the second link in the list.
+                    city = locationLinks.get(1).getText();
+                    LOGGER.info("The extracted city name is: " + city);
+                } else {
+                    LOGGER.info("Could not find a city. Found " + locationLinks.size() + " location links.");
+                }
+                mainListingText.append(city);
+
+                LOGGER.info("publi24: " + city);
+            } catch (TimeoutException e) {
+                LOGGER.warn("Main content container with selector '{}' was not found on the page.", mainContentSelector);
+            }
+
+            var descriptionClass = "article-attributes";
+            mainListingText.append(" \n Description : ");
+            var description = "";
+            try {
+                WebElement mainContentContainer = wait.until(ExpectedConditions.presenceOfElementLocated(By.className(descriptionClass)));
+                description = mainContentContainer.getAttribute("innerHTML");
+                mainListingText.append(description);
+                LOGGER.info("publi24: " + description);
+            } catch (TimeoutException e) {
+                LOGGER.warn("Main content container with selector '{}' was not found on the page.", mainContentSelector);
+            }
+
+            descriptionClass = "article-description";
+            try {
+                WebElement mainContentContainer = wait.until(ExpectedConditions.presenceOfElementLocated(By.className(descriptionClass)));
+                description = mainContentContainer.getAttribute("innerHTML");
+                mainListingText.append(description);
+                LOGGER.info("publi24: " + description);
             } catch (TimeoutException e) {
                 LOGGER.warn("Main content container with selector '{}' was not found on the page.", mainContentSelector);
             }
 
             LOGGER.info("Obtained page text successfully.");
 
-            var extractedData = "Page Text: " + mainListingText + " owner name : " + ownerName;
+            var extractedData = mainListingText.toString();
 
             return Map.of(
                     "status", "success",
@@ -243,15 +310,16 @@ public class HumanizedBrowsing
         long pageHeight = (long) js.executeScript("return document.body.scrollHeight");
         int scrollIncrement = 500; // Scroll 500 pixels at a time
 
-        for (int y = 0; y < pageHeight; y += scrollIncrement) {
-            js.executeScript("window.scrollTo(0, " + y + ");");
+        for (int y = 0; y < 5; y++) {
+            js.executeScript("window.scrollTo(0, " + scrollIncrement + ");");
             // Add a small, random pause between scrolls
-            sleepRandomly(0, 1); // Sleeps for 0 to 3 second
+            sleepRandomly(0, 1);
+            scrollIncrement = scrollIncrement + 500;
         }
 
         // One final scroll to the bottom to be sure
         js.executeScript("window.scrollTo(0, document.body.scrollHeight);");
-        sleepRandomly(0, 1); // Pause after scrolling is complete
+//        sleepRandomly(0, 1); // Pause after scrolling is complete
     }
 
 }

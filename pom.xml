@@ -12,6 +12,7 @@
     <module>two-agents</module>
     <module>workflow-agents</module>
       <module>cm-agents</module>
+      <module>ollama-deepseek</module>
   </modules>
 
   <version>1.0-SNAPSHOT</version>

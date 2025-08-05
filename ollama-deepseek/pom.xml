@@ -17,4 +17,38 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.google.adk</groupId>
+            <artifactId>google-adk</artifactId>
+            <version>0.2.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.adk</groupId>
+            <artifactId>google-adk-dev</artifactId>
+            <version>0.2.0</version>
+        </dependency>
+
+        <!-- ADK integration with LangChain4j. This brings google-adk and an older langchain4j-core -->
+        <dependency>
+            <groupId>com.google.adk</groupId>
+            <artifactId>google-adk-contrib-langchain4j</artifactId>
+            <version>0.2.0</version>
+        </dependency>
+
+        <!-- the LangChain4j Ollama provider -->
+<!--        <dependency>-->
+<!--            <groupId>dev.langchain4j</groupId>-->
+<!--            <artifactId>langchain4j-ollama</artifactId>-->
+<!--            <version>1.4.0</version>-->
+<!--        </dependency>-->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-ollama</artifactId>
+            <version>1.4.0</version>
+        </dependency>
+
+    </dependencies>
+
 </project>
